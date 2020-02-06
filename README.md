@@ -1,2 +1,2 @@
 # nwdc-seg
-Analysis of use of segregation (solitary confinement) at Northwest Detention Center
+Descriptive analysis of use of administrative and disciplinary segregation (solitary confinement) at Northwest Detention Center (a.k.a. "Northwest ICE Processing Center") in Tacoma, Washington.
