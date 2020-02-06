@@ -1,0 +1,40 @@
+```python, imports, echo=False
+# Author: University of Washington Center for Human Rights
+# Title: Segregation Data Memo
+# Date: 2020-01-21
+# License: GPL 3.0 or greater
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import datetime as dt
+import yaml
+from pandas.tseries import offsets
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator, NullLocator)
+import matplotlib.dates as mdates
+
+csv_opts = {'sep': '|',
+            'quotechar': '"',
+            'compression': 'gzip',
+            'encoding': 'utf-8'}
+
+uwchr = pd.read_csv('input/uwchr.csv.gz',
+                 parse_dates=['placement_date', 'release_date'],
+                 **csv_opts)
+
+pogo = pd.read_csv('input/pogo.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+
+icij = pd.read_csv('input/icij.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+
+```
+# Data on use of administrative segregation (solitary confinement) at Tacoma ICE Processing Center (NWDC)
+
+## Preliminary findings
+
+- <%= len(uwchr) %> administrative segregation placements at NWDC from <%= print(uwchr.placement_date.min().strftime('%B %-d, %Y')) %> to <%= print(uwchr.placement_date.max().strftime('%B %-d, %Y')) %>, according to data relased to UWCHR via FOIA.
