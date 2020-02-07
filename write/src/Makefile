@@ -8,20 +8,10 @@
 .PHONY: all clean
 
 all: \
-	output/nwdc.html \
-	output/memo.html
+	output/nwdc.html
 
 clean:
 	rm -r output/*
-
-output/memo.html: \
-		src/memo.pmd \
-		hand/alos_dict.yaml \
-		hand/adp_dict.yaml \
-		input/uwchr.csv.gz \
-		input/pogo.csv.gz \
-		input/icij.csv.gz
-	pweave src/memo.pmd -f md2html -o output/memo.html
 
 output/nwdc.html: \
 		src/nwdc.pmd \

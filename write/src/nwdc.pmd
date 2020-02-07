@@ -1,21 +1,8 @@
-```python, imports, echo=False
+```python, header, echo=False
 # Author: University of Washington Center for Human Rights
 # Title: Data Sources on Use of Solitary Confinement at Northwest ICE Processing Center
-# Date: 2019-12-31
+# Date: 2020-02-06
 # License: GPL 3.0 or greater
-
-import pandas as pd
-from pandas.tseries import offsets
-import numpy as np
-import datetime as dt
-import yaml
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, NullLocator)
-import matplotlib.dates as mdates
-import seaborn as sns
-
 ```
 
 ```python, footnote_functions, echo=False
@@ -39,9 +26,24 @@ def print_fn_refs():
         print(fn)
         print()
 
+# Functions for labeling figures and tables
+
+fig_count = 1
+tab_count = 1
+
+def fig_label():
+    global fig_count
+    print(f'Figure {fig_count}')
+    fig_count = fig_count + 1
+
+def tab_label():
+    global tab_count
+    print(f'Table {tab_count}')
+    tab_count = tab_count + 1
+
 ```
 
-# Use of Solitary Confinement at Northwest ICE Processing Center<%= fn('This report uses the term "solitary confinement" to describe practices named by ICE and GEO Group as "administrative segregation" or "disciplinary segregation". This report interchangably uses the titles "Northwest ICE Processing Center" (the title currently employed by ICE) and "Northwest Detention Center (NWDC)" (the former title used during the time period covered by this report) to refer to the immigration prison in Tacoma, Washington privately owned and operated by GEO Group on behalf of ICE.') %>
+# Use of Solitary Confinement at Northwest ICE Processing Center<%= fn('This report interchangably uses the titles "Northwest ICE Processing Center" (the title currently employed by ICE), "Tacoma ICE Processing Center" (used in some internal ICE records), and "Northwest Detention Center (NWDC)" (the former title used publicly during the time period covered by this report) to refer to the immigration prison in Tacoma, Washington privately owned and operated by GEO Group on behalf of ICE. This report uses the term "solitary confinement" to describe practices named by ICE and GEO Group as "administrative segregation" or "disciplinary segregation".') %>
 ## UW Center for Human Rights preliminary report, January 2020
 
 Data analyzed:
@@ -50,7 +52,21 @@ Data analyzed:
 2. Dataset of national solitary confinement placements in ICE detention analyzed by International Consortium of Investigative Journalists (Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, ["Thousands of Immigrants Suffer In US Solitary Confinement"]((https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/)), ICIJ, May 21 2019)
 3. Dataset of national solitary confinement placements in ICE detention analyzed by Project on Government Oversight (POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14 2019)
 
-<br>
+```python, imports, echo=True
+
+import pandas as pd
+from pandas.tseries import offsets
+import numpy as np
+import datetime as dt
+import yaml
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator, NullLocator)
+import matplotlib.dates as mdates
+import seaborn as sns
+
+```
 
 ## NWDC Solitary Confinement Placements Dataset Released to UWCHR
 
@@ -65,7 +81,7 @@ The request was acknowledged by ICE on October 4, 2017 and assigned Case Number 
 On September 21, 2018, the University of Washington filed suit against the Department of Homeland Security (DHS), ICE, and Customs and Border Protection (CBP) for violations of FOIA, including failure to respond to this request in a timely manner (The University of Washington, et al. v. Department of Homeland Security, et al.
 U.S. District Court, Western District of Washington Case No. 2:18-cv-01396-BJR).
 
-On February 22, 2019, as part of document production pursuant to the UW lawsuit, ICE released a with filename `2018-ICFO-00515 Highlighted_EDIT.xlsx` in response to this request. This document is described and analyzed in the continuing sections.
+On February 22, 2019, as part of document production pursuant to the UW lawsuit, ICE released a spreadsheet with filename `2018-ICFO-00515 Highlighted_EDIT.xlsx` in response to this request. In a separate process, this document has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed. The resulting file, `2018-ICFO-00515 Highlighted_PUBLIC.csv.gz`, after cleaning and standardization documented in [`clean/`](https://github.com/UWCHR/nwdc-seg/tree/master/clean), is described and analyzed in the continuing sections.
 
 In response to this production as part of the ongoing litigation, UWCHR pointed out that this release does not fully satisfy its original request:
 
@@ -73,7 +89,9 @@ In response to this production as part of the ongoing litigation, UWCHR pointed 
 
 Litigation in this case is ongoing.
 
-```python, data_import_and_global_vars, echo=False
+### Dataset Description and Analysis
+
+```python, data_import_and_global_vars, echo=True
 
 csv_opts = {'sep': '|',
             'quotechar': '"',
@@ -88,19 +106,11 @@ assert len(uwchr[uwchr['release_date'] < uwchr['placement_date']]) == 0
 assert len(uwchr) == len(set(uwchr['tracking_number']))
 assert sum(uwchr['placement_date'].isnull()) == 0
 
-uwchr_total = len(uwchr)
-uwchr_min_place = uwchr.placement_date.min().strftime('%B %-d, %Y')
-uwchr_max_place = uwchr.placement_date.max().strftime('%B %-d, %Y')
-uwchr_min_release = uwchr.release_date.min().strftime('%B %-d, %Y')
-uwchr_max_release = uwchr.release_date.max().strftime('%B %-d, %Y')
-
 ```
 
-### Dataset Description and Analysis
+The dataset released to UWCHR includes <%= len(uwchr) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names and A-numbers are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements.
 
-The dataset released to UWCHR includes <%= uwchr_total %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names and A-numbers are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements.
-
-The earliest placement date (start of solitary stay) was <%= print(uwchr_min_place) %> and the latest placement date was <%= print(uwchr_max_place) %>. The earliest release date (end of solitary stay) was <%= print(uwchr_min_release) %> and the latest release date was <%= print(uwchr_max_release) %>.
+The earliest placement date (start of solitary stay) was <%= print(uwchr.placement_date.min().strftime('%B %-d, %Y')) %> and the latest placement date was <%= print(uwchr.placement_date.max().strftime('%B %-d, %Y')) %>. The earliest release date (end of solitary stay) was <%= print(uwchr.release_date.min().strftime('%B %-d, %Y')) %> and the latest release date was <%= print(uwchr.release_date.max().strftime('%B %-d, %Y')) %>.
 
 
 ```python, country_of_citizenship_table, echo=False
@@ -129,6 +139,8 @@ data = g_monthly['tracking_number'].nunique()
 
 No month during the period included in the dataset had fewer than <%= data.min() %> solitary placements. The maximum number of solitary confinement placements in a single month was <%= print(f'{data.max()} in {data.idxmax().month_name()} {data.idxmax().year}') %>. The overall average number of solitary placements per month was <%= round(data.mean(), 2) %>.
 
+**<%= fig_label() %>: Total monthly solitary confinement placements at NWDC**
+
 ```python, placement_chart, echo=False, fig=True, width="1200px"
 
 years_loc = mdates.YearLocator()
@@ -155,7 +167,9 @@ plt.show()
 
 ```
 
-<%= sum(uwchr['gender'] == 'Male') %> people placed in solitary were male, <%= sum(uwchr['gender'] == 'Female') %> were female. People placed in solitary confinement at NWDC were from <%= len(set(uwchr['country_of_citizenship'])) %> countries. The top 5 countries of citizenship are listed in the table below:
+<%= sum(uwchr['gender'] == 'Male') %> people placed in solitary were male, <%= sum(uwchr['gender'] == 'Female') %> were female. People placed in solitary confinement at NWDC were from <%= len(set(uwchr['country_of_citizenship'])) %> countries. The top 5 countries of citizenship are listed in Table 1 below.
+
+**<%= tab_label() %>: Top five countries of citizenship of detainees placed in solitary confinement at NWDC**
 
 <% print(top_5.reset_index().to_html(border=0, index=False)) %>
 
@@ -180,9 +194,11 @@ The maximum completed solitary placement length was <%= int(uwchr['days_solitary
 
 The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(uwchr['days_solitary'] <= 30) / len(uwchr) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(uwchr['days_solitary'] > 30) / len(uwchr) * 100, 2) %>% of placements were for more than 30 days.
 
-<%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr) * 100, 2) %>% of placements were for 15 days or less, and <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr) * 100, 2) %>% of placements were for more than 15 days.
+<%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr) * 100, 2) %>% of placements were for 15 days or less, and <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, solitary confinement for more than 15 consecutive days is prohibited.
 
-The following histogram chart displays the distribution of placement lengths (excluding outliers):
+The following histogram chart displays the distribution of placement lengths (excluding outliers).
+
+**<%= fig_label() %>: Distribution of solitary confinment placement lengths (`days_solitary`) at NWDC**
 
 ```python, solitary_length_hist, echo=False
 max = 780
@@ -227,7 +243,7 @@ Each solitary placement is categorized with one of <%= len(set(uwchr['placement_
 
 We can also aggregate these placement reasons into broader categories for comparison, as in the following figure (which uses a natural log transform of `days_solitary` to better show the distribution of values):
 
-**Figure: Distribution of variable** `log_days_solitary` **grouped by** `placement_reason_type`
+**<%= fig_label() %>: Distribution of variable** `log_days_solitary` **grouped by** `placement_reason_type`
 
 ```python, placement_reason_chart, echo=False
 
@@ -240,13 +256,13 @@ ax = ax.set_xticklabels(ax.get_xticklabels(),rotation=90);
 
 As seen in the following table describing the lenth of solitary placement for each detailed placement type, the most frequently used reasons include broad categories such as "Disciplinary", "Protective Custody: Other Detainee Safety" and "Facility Security Threat: Other".
 
-**Table: Description of variable** `days_solitary` **grouped by** `placement_reason`
+**<%= tab_label() %>: Description of variable** `days_solitary` **grouped by** `placement_reason`
 
 <% print(placements.to_html(border=0, index=True)) %>
 
 Application of different placement reason categories appears to vary over time, as seen in the following figure. Note for example the frequent "Disciplinary" placements during calendar years 2013-2014, and the clusters of "Facility Security Threat" placements in 2017-Q2 and 2018-Q1.
 
-**Figure: NWDC solitary placement reasons and stay length (log transform) over time**
+**<%= fig_label() %>: NWDC solitary placement reasons and stay length (log transform) over time**
 
 ```python, placement_reason_timeline, echo=False, fig=True, width='1200px'
 
@@ -287,7 +303,7 @@ Each placement is coded as either "Facility-Initiated" (<%= len(uwchr[~detainee_
 
 Average stay lengths for "Detainee Request" placements were considerably longer than for "Facility-Initiated" placements (<%= round(uwchr.loc[detainee_requested, 'days_solitary'].mean(), 2) %> versus <%= round(uwchr.loc[~detainee_requested, 'days_solitary'].mean(), 2) %>) days; however, we note that stay lengths vary greatly and fluctuate over time, as seen in the following figure.
 
-**Table: Description of variable** `log_days_solitary` **grouped by** `placement_year` **and** `detainee_request`
+**<%= tab_label() %>: Description of variable** `log_days_solitary` **grouped by** `placement_year` **and** `detainee_request`
 
 
 ```python, nwdc_detainee_request_by_year_chart, echo=False
@@ -298,7 +314,7 @@ ax = sns.boxplot(data=uwchr, x='placement_year', y='log_days_solitary', hue='det
 
 ```
 
-**Table: Description of variable** `days_solitary` **grouped by** `detainee_request` **and** `placement_reason_type`
+**<%= tab_label() %>: Description of variable** `days_solitary` **grouped by** `detainee_request` **and** `placement_reason_type`
 
 <% print(request_reason.to_html(border=0, index=True)) %>
 
@@ -321,6 +337,8 @@ Multiple records classified with `placement_reason_type` "Facility Security Thre
 ### Solitary Confinement Population Timeline
 
 For the period of time covered by the dataset, we count the number of people currently in solitary confinement placements on each day to present a timeline of total solitary confinement population. Note that some individuals may have already been in solitary confinement at the beginning of this timeline, so the earlier period may represent an under-count of the total population. The average population in solitary is between 9 to 12 during 2013-2016, rising to an average of nearly 17 during 2017, and an average of more than 18 people in solitary time during the first five months of 2018. 
+
+**<%= fig_label() %>: Timeline of total solitary population at NWDC**
 
 ```python, solitary_pop_count, echo=False, fig=True, width='1000px'
 
@@ -396,7 +414,7 @@ NWDC is ranked #<%= int(icij.groupby('facility')['record_id'].count().rank(ascen
 
 ### POGO
 
-See: POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14, 2019.<%= fn('See notebook `pogo.ipynb` for descriptive analysis of POGO dataset including comparison with UWCHR records. Records published by POGO match records released to UWCHR.') %>
+See: POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14, 2019.
 
 The dataset published by POGO includes <%= len(pogo[pogo_nwdc]) %> solitary confinement placements at NWDC from <%= print(pogo.placement_date.min().strftime('%B %-d, %Y')) %> to <%= print(pogo.placement_date.max().strftime('%B %-d, %Y')) %>, out of a total of <%= len(pogo) %> placements nationwide.
 
@@ -419,7 +437,7 @@ pogo_facil_table = pogo_facil_table.head(10)
 
 ```
 
-**Table: Top 10 immigration detention facilities by average solitary placement length, description of variable `days_solitary`**
+**<%= tab_label() %>: Top 10 immigration detention facilities by average solitary placement length, description of variable `days_solitary`**
 
 <% print(pogo_facil_table.to_html(border=0, index=True)) %>
 
@@ -427,10 +445,10 @@ pogo_facil_table = pogo_facil_table.head(10)
 
 The following figure shows that among the 15 immigration detention facilties with the most total solitary placements from January 2016 to May 2018, Northwest Detention Center consistently had significantly longer average solitary placement lengths than other facilities.
 
-**Figure: Top 15 immigration detention facilities by total number of solitary placements, average solitary placement length per quarter**
+**<%= fig_label() %>: Top 15 immigration detention facilities by total number of solitary placements, average solitary placement length per quarter**
 
 
-```python, solitary_length_timeline, echo=False, fig=True, width="1200px"
+```python, solitary_length_timeline, echo=False, fig=True, width="800px"
 
 facil_count = pogo.groupby('facility')['record_id'].count()
 facil_count = facil_count.sort_values(ascending=False)
@@ -468,7 +486,7 @@ plt.ylabel('Solitary days', fontsize=14)
 plt.suptitle('Average solitary placement length (quarterly)', fontsize=16)
 plt.title('Top 15 ICE facilities by total solitary placements, Jan. 2016 - May 2018')
 handles, labels = ax.get_legend_handles_labels()
-leg = ax.legend(loc='upper right', bbox_to_anchor=(1.9, 1), fontsize=12, title='Detention Facility - Solitary Placements', title_fontsize=14, labels=edit_labels.values)
+leg = ax.legend(loc='lower center', bbox_to_anchor=(.5, -1), fontsize=12, title='Detention Facility - Solitary Placements', title_fontsize=14, labels=edit_labels.values)
 #fig.savefig('../output/avg_solitary_length.png', dpi=300, bbox_inches='tight')
 plt.show()
 
@@ -500,13 +518,13 @@ pogo_reason['std'] = round(pogo_reason['std'], 2)
 
 Average solitary stays at NWDC are longer than other facilities for both "detainee request" and "facility-initiated" placements:
 
-**Table: Solitary placements groupbed by `detainee_request`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
+**<%= tab_label() %>: Solitary placements groupbed by `detainee_request`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
 
 <% print(pogo_det_req.to_html(border=0, index=True)) %>
 
 Placement reason categories longer on average at NWDC than at other detention facilities nationwide include "Facility Security Threat", "Medical", and "Protective Custody". We note that no solitary placements at NWDC are classified as "Suicide Risk Placement".
 
-**Table: Solitary placements grouped by `placement_reason_type`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
+**<%= tab_label() %>: Solitary placements grouped by `placement_reason_type`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
 
 <% print(pogo_reason.to_html(border=0, index=True)) %>
 
