@@ -538,10 +538,10 @@ Placement reason categories longer on average at NWDC than at other detention fa
 
 ```python, alos, echo=False
 
-with open(f'hand/adp_dict.yaml', 'r') as yamlfile:
+with open(f'frozen/adp_dict.yaml', 'r') as yamlfile:
     adp_dict = yaml.load(yamlfile)
     
-with open(f'hand/alos_dict.yaml', 'r') as yamlfile:
+with open(f'frozen/alos_dict.yaml', 'r') as yamlfile:
     alos_dict = yaml.load(yamlfile)
 
 adp = pd.DataFrame(adp_dict).astype('float')
@@ -591,8 +591,9 @@ for fy in alos_cols:
     n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
     
     target_bins = np.digitize(list(target_alos.values), list(bins))
+    target_bins = target_bins - 1 # patches below needs 0-indexed input
     
-    patches[target_bins[i]-1].set_fc('r')
+    patches[target_bins[i]].set_fc('r')
  
     plt.xlabel('ALOS')
     plt.xticks(np.arange(bin_min, bin_max, step=step), rotation=45)
@@ -604,7 +605,6 @@ for fy in alos_cols:
     # Tweak spacing to prevent clipping of ylabel
     plt.subplots_adjust(left=0.15) 
     i = i + 1
-    # plt.savefig('output/nwdc_solitary_length_hist.png', bbox_inches='tight')
 plt.suptitle(f'Distribution of ALOS at ICE detention facilities, NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.2, hspace=.4)
 plt.show()
@@ -612,6 +612,40 @@ plt.show()
 ```
 
 According to ICE's FY2020 Budget Congressional Justification, the national average length of stay (ALOS) in immigration detention was 47.4 days in FY2018.<%= fn('See: <https://www.dhs.gov/sites/default/files/publications/19_0318_MGMT_CBJ-Immigration-Customs-Enforcement_0.pdf>, page 4.') %> The same source also notes, "For those arrested during ICE interior enforcement operations, ALOS was 53.9 days."<%= fn('Ibid. p. 148.') %>
+
+```python, adp_alos_scatter, echo=False
+
+data = alos.join(adp)
+
+print(len(data))
+
+fys = ['FY15', 'FY16', 'FY17', 'FY18']
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in fys:
+    adp_col = f'{fy} ADP'
+    alos_col = f'{fy} ALOS'
+    ax=plt.subplot(2,2,i+1)
+    i = i+1
+    
+    plt.scatter(x=alos_col, y=adp_col, data=data)
+    plt.scatter(x=alos_col, y=adp_col, c='r', data=data.loc['CSCNWWA'])
+    
+    plt.xlabel('ALOS')
+    plt.xticks(np.arange(0, 351, step=50), rotation=45)
+    plt.xlim(-5, 350)
+    plt.ylabel('ADP')
+    plt.yticks(np.arange(0, 2001, step=200))
+    plt.ylim(-100, 2000)
+    plt.title(f'{fy}')
+
+plt.suptitle(f'ICE facilities by ADP, ALOS; NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.4, hspace=.4)
+plt.show();
+
+
+```
 
 ---
 

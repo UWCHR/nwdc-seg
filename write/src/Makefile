@@ -15,8 +15,8 @@ clean:
 
 output/nwdc.html: \
 		src/nwdc.pmd \
-		hand/alos_dict.yaml \
-		hand/adp_dict.yaml \
+		frozen/alos_dict.yaml \
+		frozen/adp_dict.yaml \
 		input/uwchr.csv.gz \
 		input/pogo.csv.gz \
 		input/icij.csv.gz
