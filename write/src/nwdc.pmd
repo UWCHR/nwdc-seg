@@ -548,19 +548,68 @@ adp = pd.DataFrame(adp_dict).astype('float')
 
 alos = pd.DataFrame(alos_dict).astype('float')
 
-alos = alos.dropna(how='all', axis=1)
+adp = adp.dropna(how='all', axis=1)
 
-alos = alos.drop('Redacted', axis=1)
+alos = alos.dropna(how='all', axis=1)
 
 adp = adp.drop('Redacted', axis=1)
 
-nwdc_alos_percent = alos.T.rank(pct=True, ascending=True).loc['CSCNWWA']
+alos = alos.drop('Redacted', axis=1)
+
+adp = adp.T
+
+alos = alos.T
+
+nwdc_alos_percent = alos.rank(pct=True, ascending=True).loc['CSCNWWA']
 
 nwdc_alos_percent_mean = nwdc_alos_percent.mean()
 
 ```
 
-Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(alos.T.loc['CSCNWWA']['FY15 ALOS']) %> days in FY2015 to <%= int(alos.T.loc['CSCNWWA']['FY18 ALOS']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of other immigration detention centers nationwide.
+Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(alos.loc['CSCNWWA']['FY15 ALOS']) %> days in FY2015 to <%= int(alos.loc['CSCNWWA']['FY18 ALOS']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of other immigration detention centers nationwide.
+
+```python, alos_hist, echo=False
+
+alos_cols = ['FY15 ALOS', 'FY16 ALOS', 'FY17 ALOS', 'FY18 ALOS']
+
+bin_min = 0
+bin_max = 400
+step = 30
+
+num_bins = np.arange(bin_min, bin_max, step)
+
+target_facil = 'CSCNWWA'
+target_alos = alos.loc[target_facil, alos_cols]
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in alos_cols:
+    ax=plt.subplot(2,2,i+1)
+    
+    data = alos[fy]
+    
+    n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
+    
+    target_bins = np.digitize(list(target_alos.values), list(bins))
+    
+    patches[target_bins[i]-1].set_fc('r')
+ 
+    plt.xlabel('ALOS')
+    plt.xticks(np.arange(bin_min, bin_max, step=step), rotation=45)
+    plt.ylabel('Facil Count')
+    plt.yticks(np.arange(0, 400, step=50))
+    plt.ylim(-5, 375)
+    plt.title(f'{fy}')
+
+    # Tweak spacing to prevent clipping of ylabel
+    plt.subplots_adjust(left=0.15) 
+    i = i + 1
+    # plt.savefig('output/nwdc_solitary_length_hist.png', bbox_inches='tight')
+plt.suptitle(f'Distribution of ALOS at ICE detention facilities, NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.2, hspace=.4)
+plt.show()
+
+```
 
 According to ICE's FY2020 Budget Congressional Justification, the national average length of stay (ALOS) in immigration detention was 47.4 days in FY2018.<%= fn('See: <https://www.dhs.gov/sites/default/files/publications/19_0318_MGMT_CBJ-Immigration-Customs-Enforcement_0.pdf>, page 4.') %> The same source also notes, "For those arrested during ICE interior enforcement operations, ALOS was 53.9 days."<%= fn('Ibid. p. 148.') %>
 
