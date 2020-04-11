@@ -17,6 +17,7 @@ output/nwdc.html: \
 		src/nwdc.pmd \
 		frozen/alos_dict.yaml \
 		frozen/adp_dict.yaml \
+		frozen/facil-list.csv.gz \
 		input/uwchr.csv.gz \
 		input/pogo.csv.gz \
 		input/icij.csv.gz

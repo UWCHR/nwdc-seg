@@ -538,39 +538,28 @@ Placement reason categories longer on average at NWDC than at other detention fa
 
 ```python, alos, echo=False
 
-with open(f'frozen/adp_dict.yaml', 'r') as yamlfile:
-    adp_dict = yaml.load(yamlfile)
-    
-with open(f'frozen/alos_dict.yaml', 'r') as yamlfile:
-    alos_dict = yaml.load(yamlfile)
+facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
 
-adp = pd.DataFrame(adp_dict).astype('float')
+adp_cols = ['fy15_adp', 'fy16_adp', 'fy17_adp', 'fy18_adp']
 
-alos = pd.DataFrame(alos_dict).astype('float')
+alos_cols = ['fy15_alos', 'fy16_alos', 'fy17_alos', 'fy18_alos']
 
-adp = adp.dropna(how='all', axis=1)
-
-alos = alos.dropna(how='all', axis=1)
-
-adp = adp.drop('Redacted', axis=1)
-
-alos = alos.drop('Redacted', axis=1)
-
-adp = adp.T
-
-alos = alos.T
+alos = facil.set_index('detloc')[alos_cols]
 
 nwdc_alos_percent = alos.rank(pct=True, ascending=True).loc['CSCNWWA']
 
 nwdc_alos_percent_mean = nwdc_alos_percent.mean()
 
+# Drop ORR facilities? Outliers?
+
+
 ```
 
-Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(alos.loc['CSCNWWA']['FY15 ALOS']) %> days in FY2015 to <%= int(alos.loc['CSCNWWA']['FY18 ALOS']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of other immigration detention centers nationwide.
+Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy15_alos']) %> days in FY2015 to <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy18_alos']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of other immigration detention centers nationwide.
 
 ```python, alos_hist, echo=False
 
-alos_cols = ['FY15 ALOS', 'FY16 ALOS', 'FY17 ALOS', 'FY18 ALOS']
+fys = ['fy15', 'fy16', 'fy17', 'fy18']
 
 bin_min = 0
 bin_max = 400
@@ -583,10 +572,10 @@ target_alos = alos.loc[target_facil, alos_cols]
 
 fig = plt.figure(figsize=(10,8))
 i = 0
-for fy in alos_cols:
+for fy in fys:
     ax=plt.subplot(2,2,i+1)
     
-    data = alos[fy]
+    data = alos[f'{fy}_alos']
     
     n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
     
@@ -615,17 +604,15 @@ According to ICE's FY2020 Budget Congressional Justification, the national avera
 
 ```python, adp_alos_scatter, echo=False
 
-data = alos.join(adp)
+data = facil.set_index('detloc')[alos_cols + adp_cols]
 
-print(len(data))
-
-fys = ['FY15', 'FY16', 'FY17', 'FY18']
+fys = ['fy15', 'fy16', 'fy17', 'fy18']
 
 fig = plt.figure(figsize=(10,8))
 i = 0
 for fy in fys:
-    adp_col = f'{fy} ADP'
-    alos_col = f'{fy} ALOS'
+    adp_col = f'{fy}_adp'
+    alos_col = f'{fy}_alos'
     ax=plt.subplot(2,2,i+1)
     i = i+1
     
@@ -633,14 +620,53 @@ for fy in fys:
     plt.scatter(x=alos_col, y=adp_col, c='r', data=data.loc['CSCNWWA'])
     
     plt.xlabel('ALOS')
-    plt.xticks(np.arange(0, 351, step=50), rotation=45)
-    plt.xlim(-5, 350)
+    plt.xticks(np.arange(0, 451, step=50), rotation=45)
+    plt.xlim(-10, 450)
     plt.ylabel('ADP')
     plt.yticks(np.arange(0, 2001, step=200))
     plt.ylim(-100, 2000)
     plt.title(f'{fy}')
 
-plt.suptitle(f'ICE facilities by ADP, ALOS; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE facilities by ALOS, ADP; NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.4, hspace=.4)
+plt.show();
+
+
+```
+
+```python, alos_solitary_scatter, echo=False
+
+g = pogo.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT'),'detloc'])
+
+sol_alos = g['days_solitary'].mean().unstack().T
+sol_alos.columns = ['fy16_solitary_alos', 'fy17_solitary_alos', 'fy18_solitary_alos']
+
+data = sol_alos.join(facil.set_index('detloc')[alos_cols])
+data = data.drop('fy15_alos', axis=1)
+# data = data.fillna(0)
+
+fys = ['fy16', 'fy17', 'fy18']
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in fys:
+    x = f'{fy}_alos'
+    y = f'{fy}_solitary_alos'
+    ax=plt.subplot(2,2,i+1)
+    i = i+1
+    
+    plt.scatter(x=x, y=y, data=data)
+    plt.scatter(x=x, y=y, c='r', data=data.loc['CSCNWWA'])
+    
+    plt.xlabel('Total ALOS')
+    plt.xlim(-5, 130)
+    plt.xticks(np.arange(0, 126, step=25), rotation=45)
+    plt.ylabel('Solitary ALOS')
+    plt.yticks(np.arange(0, 151, step=25))
+    plt.ylim(-5, 150)
+    plt.title(f'{fy}')
+
+plt.suptitle(f'ICE facilities by total ALOS, solitary ALOS; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
