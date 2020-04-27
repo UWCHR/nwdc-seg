@@ -48,7 +48,7 @@ def tab_label():
 
 Data analyzed:
 
-1. Dataset of solitary confinement placements at NWDC relased to UWCHR via FOIA on February 22, 2019
+1. Dataset of solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019
 2. Dataset of national solitary confinement placements in ICE detention analyzed by International Consortium of Investigative Journalists (Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, ["Thousands of Immigrants Suffer In US Solitary Confinement"]((https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/)), ICIJ, May 21 2019)
 3. Dataset of national solitary confinement placements in ICE detention analyzed by Project on Government Oversight (POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14 2019)
 4. Dataset of characteristics of ICE detention facilities obtained via FOIA by National Immigrant Justice Center (NIJC, ["
@@ -92,6 +92,12 @@ In response to this production as part of the ongoing litigation, UWCHR pointed 
 Litigation in this case is ongoing.
 
 In a separate process, the document released by ICE (`2018-ICFO-00515 Highlighted_EDIT.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed. The resulting file, `2018-ICFO-00515 Highlighted_PUBLIC.csv.gz`, after cleaning and standardization documented in [`clean/`](https://github.com/UWCHR/nwdc-seg/tree/master/clean), is described and analyzed in the continuing sections.
+
+### Data Quality
+
+Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have noted that the data likely under-reports true total solitary confinement placements, either due to inaccurate record-keeping or restrictive criteria for cases which are recorded by ICE. In correspondence related to UWCHR's FOIA litigation against ICE, counsel for DHS has confirmed that the dataset released to UWCHR is drawn from ICE's "Segregation Review Management System" (SRMS), asserting that "Only certain categories of segregation are required to be reported to ICE." A 2017 DHS Office of the Inspector General report explains, "According to SRMS guidance, ERO field office staff, including FODs, must use SRMS to report segregation placement data that falls under the ICE directive’s reporting requirements." These requirements include segregation placements affecting people with "special vulnerabilities" including mental health diagnoses; and placements exceeding 14 days during any 21-day period.<%= fn('OIG-17-119, [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), September 29, 2017.') %> However, elsewhere ICE has stated "SRMS provides a centralized historical record of all segregation cases".<%= fn('[ICE 2017 Budget Justification](https://www.thisweekinimmigration.com/uploads/6/9/2/2/69228175/fy17budgetcongressionaljustificationdhs2.pdf), p. 54.') %>
+
+A comparison of SRMS data released via FOIA with other sources noting segregation placement counts suggests that under-reporting may be extensive. For example, SRMS data released to UWCHR under FOIA reports 98 total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports 219 total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of 614) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
 
 ### Dataset Description and Analysis
 
@@ -338,51 +344,6 @@ Nine records have `placement_reason` "Mental Illness".
 
 Multiple records classified with `placement_reason_type` "Facility Security Threat" include comments noting that they were initiated as disciplinary placements.
 
-### Solitary Confinement Population Timeline
-
-For the period of time covered by the dataset, we count the number of people currently in solitary confinement placements on each day to present a timeline of total solitary confinement population. Note that some individuals may have already been in solitary confinement at the beginning of this timeline, so the earlier period may represent an under-count of the total population. The average population in solitary is between 9 to 12 during 2013-2016, rising to an average of nearly 17 during 2017, and an average of more than 18 people in solitary time during the first five months of 2018. 
-
-**<%= fig_label() %>: Timeline of total solitary population at NWDC**
-
-```python, solitary_pop_count, echo=False, fig=True, width='1000px'
-
-min_date = uwchr['placement_date'].min()
-max_date = uwchr['release_date'].max()
-timeline = pd.date_range(min_date, max_date, freq='D')
-years = timeline.year.unique()
-
-counts = pd.Series(index=timeline)
-for day in timeline:
-    in_range = uwchr[(uwchr['placement_date'] <= day) & (uwchr['release_date'] >= day)]
-    counts[day] = len(in_range)
-
-fig = plt.figure(figsize=(10,8))
-i = 0
-for year in years:
-    ax=plt.subplot(3,2,i+1)
-
-    ax.set_title(f'{year}')
-    counts[f'{year}'].plot(ax=ax)
-    datemin = pd.Timestamp(f'{year}-01-01')
-    datemax = pd.Timestamp(f'{year}-12-31')
-    ax.set_facecolor('#EEEEEE')
-    ax.set_xlim([datemin, datemax])
-    ax.set_ylim([-2,30])
-    ax.yaxis.set_minor_locator(MultipleLocator(5))
-    ax.xaxis.set_minor_locator(NullLocator())
-    ax.axhline(counts[f'{year}'].mean(), color='r')
-    i = i + 1
-    plt.grid(axis='y', which='minor', color='#FFFFFF')
-plt.subplots_adjust(wspace=.2, hspace=.4)
-fig.suptitle("NWDC Daily Solitary Confinement Population", fontsize=16)
-fig.legend(('Population', 'Annual Mean'), loc='upper right')
-fig.savefig('output/nwdc_solitary_pop_timeline.png', bbox_inches='tight', dpi=300)
-plt.show()
-
-```
-
-<br>
-
 ## National solitary confinement data
 
 At least two reports based on national data regarding the use of solitary confinement in immigration detention have been published, by the Internaional Consortium of Investigative Journalists (ICIJ) and the Project on Government Oversight (POGO). The data underlying these reports cover an overlapping time period also covered by the data released to UWCHR by ICE. However, due to the lack of unique identifiers for each solitary confinemnet placement, it is not possible to merge these datasets into a single national timeline.
@@ -627,7 +588,7 @@ for fy in fys:
     plt.ylim(-100, 2000)
     plt.title(f'{fy}')
 
-plt.suptitle(f'ICE facilities by ALOS, ADP; NWDC highlighted', fontsize=14)
+plt.suptitle(f'All ICE facilities by ALOS, ADP; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
@@ -666,7 +627,7 @@ for fy in fys:
     plt.ylim(-5, 150)
     plt.title(f'{fy}')
 
-plt.suptitle(f'ICE facilities by total ALOS, solitary ALOS; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE facilities with solitaty placements\nby total ALOS, solitary ALOS; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
