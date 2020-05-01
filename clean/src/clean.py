@@ -55,11 +55,18 @@ if __name__ == "__main__":
     placement_types = cleanrules['placement_types']
     df['placement_reason_type'] = df['placement_reason'].replace(placement_types)
 
+    admin_or_disciplinary = cleanrules['admin_or_disciplinary']
+    df['admin_or_disciplinary'] = df['placement_reason'].replace(admin_or_disciplinary)
+
     facil = pd.read_csv(args.facilities)
     facil_detloc = dict(zip(facil['facility'], facil['detloc']))
 
     df['detloc'] = df['facility'].replace(facil_detloc)
     df = df.rename(cleanrules['rename'], axis=1)
+
+    if args.output == 'output/uwchr.csv.gz':
+        regions = cleanrules['country_of_citizenship']
+        df['citizenship_region'] = df['country_of_citizenship'].replace(regions)
 
     write_csv_opts = {'sep': '|',
                       'quotechar': '"',
