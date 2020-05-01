@@ -567,6 +567,8 @@ According to ICE's FY2020 Budget Congressional Justification, the national avera
 
 data = facil.set_index('detloc')[alos_cols + adp_cols]
 
+data = data[data.index.isin(set(pogo['detloc']))]
+
 fys = ['fy15', 'fy16', 'fy17', 'fy18']
 
 fig = plt.figure(figsize=(10,8))
@@ -581,14 +583,14 @@ for fy in fys:
     plt.scatter(x=alos_col, y=adp_col, c='r', data=data.loc['CSCNWWA'])
     
     plt.xlabel('ALOS')
-    plt.xticks(np.arange(0, 451, step=50), rotation=45)
-    plt.xlim(-10, 450)
+    plt.xticks(np.arange(0, 151, step=25), rotation=45)
+    plt.xlim(-10, 151)
     plt.ylabel('ADP')
     plt.yticks(np.arange(0, 2001, step=200))
     plt.ylim(-100, 2000)
-    plt.title(f'{fy}')
+    plt.title(f'{fy.upper()}')
 
-plt.suptitle(f'All ICE facilities by ALOS, ADP; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE facilities with solitary placements\nby ALOS, ADP; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
@@ -604,7 +606,6 @@ sol_alos.columns = ['fy16_solitary_alos', 'fy17_solitary_alos', 'fy18_solitary_a
 
 data = sol_alos.join(facil.set_index('detloc')[alos_cols])
 data = data.drop('fy15_alos', axis=1)
-# data = data.fillna(0)
 
 fys = ['fy16', 'fy17', 'fy18']
 
@@ -625,9 +626,9 @@ for fy in fys:
     plt.ylabel('Solitary ALOS')
     plt.yticks(np.arange(0, 151, step=25))
     plt.ylim(-5, 150)
-    plt.title(f'{fy}')
+    plt.title(f'{fy.upper()}')
 
-plt.suptitle(f'ICE facilities with solitaty placements\nby total ALOS, solitary ALOS; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE facilities with solitary placements\nby total ALOS, avg. solitary placement length; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
