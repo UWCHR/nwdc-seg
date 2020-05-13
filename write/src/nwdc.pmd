@@ -5,6 +5,22 @@
 # License: GPL 3.0 or greater
 ```
 
+```python, imports, echo=True
+
+import pandas as pd
+from pandas.tseries import offsets
+import numpy as np
+import datetime as dt
+import yaml
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator, NullLocator)
+import matplotlib.dates as mdates
+import seaborn as sns
+
+```
+
 ```python, footnote_functions, echo=False
 
 # Functions for HTML formatted footnotes
@@ -54,19 +70,44 @@ Data analyzed:
 4. Dataset of characteristics of ICE detention facilities obtained via FOIA by National Immigrant Justice Center (NIJC, ["
 ICE Detention Facilities As Of November 2017"](https://immigrantjustice.org/ice-detention-facilities-november-2017))
 
-```python, imports, echo=True
+```python, data_import, echo=True
 
-import pandas as pd
-from pandas.tseries import offsets
-import numpy as np
-import datetime as dt
-import yaml
-import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
-from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
-                               AutoMinorLocator, NullLocator)
-import matplotlib.dates as mdates
-import seaborn as sns
+csv_opts = {'sep': '|',
+            'quotechar': '"',
+            'compression': 'gzip',
+            'encoding': 'utf-8'}
+
+# Import and test asserts for UWCHR segregation log dataset
+uwchr = pd.read_csv('input/uwchr.csv.gz',
+                 parse_dates=['placement_date', 'release_date'],
+                 **csv_opts)
+
+assert len(uwchr[uwchr['release_date'] < uwchr['placement_date']]) == 0
+assert len(uwchr) == len(set(uwchr['tracking_number']))
+assert sum(uwchr['placement_date'].isnull()) == 0
+
+# Import ICIJ segregation log dataset
+icij = pd.read_csv('input/icij.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+icij['facility'] = icij['facility'].str.strip()
+icij_nwdc_str = 'WA - Northwest Detention Center'
+icij_nwdc = icij['facility'] == icij_nwdc_str
+icij_adelanto = icij['facility'] == 'CA - Adelanto Correctional Facility'
+
+# Import POGO segregation log dataset
+pogo = pd.read_csv('input/pogo.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+
+pogo['record_id'] = range(len(pogo))
+pogo = pogo.rename({'length_of_solitary_confinement_(pogo_calculation)': 'days_solitary'}, axis=1)
+pogo_nwdc_str = 'TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)'
+pogo_nwdc = pogo['facility'] == pogo_nwdc_str
+pogo['nwdc'] = pogo['facility'] == pogo_nwdc_str
+
+# Import NIJC facilities dataset
+facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
 
 ```
 
@@ -95,30 +136,36 @@ In a separate process, the document released by ICE (`2018-ICFO-00515 Highlighte
 
 ### Data Quality
 
-Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have noted that the data likely under-reports true total solitary confinement placements, either due to inaccurate record-keeping or restrictive criteria for cases which are recorded by ICE. In correspondence related to UWCHR's FOIA litigation against ICE, counsel for DHS has confirmed that the dataset released to UWCHR is drawn from ICE's "Segregation Review Management System" (SRMS), asserting that "Only certain categories of segregation are required to be reported to ICE." A 2017 DHS Office of the Inspector General report explains, "According to SRMS guidance, ERO field office staff, including FODs, must use SRMS to report segregation placement data that falls under the ICE directive’s reporting requirements." These requirements include segregation placements affecting people with "special vulnerabilities" including mental health diagnoses; and placements exceeding 14 days during any 21-day period.<%= fn('OIG-17-119, [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), September 29, 2017.') %> However, elsewhere ICE has stated "SRMS provides a centralized historical record of all segregation cases".<%= fn('[ICE 2017 Budget Justification](https://www.thisweekinimmigration.com/uploads/6/9/2/2/69228175/fy17budgetcongressionaljustificationdhs2.pdf), p. 54.') %>
+Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have noted that the data likely under-reports true total solitary confinement placements, either due to inaccurate record-keeping or limited criteria for cases which are recorded by ICE. In correspondence related to UWCHR's FOIA litigation against ICE, counsel for DHS has confirmed that the dataset released to UWCHR is drawn from ICE's "Segregation Review Management System" (SRMS), asserting that "Only certain categories of segregation are required to be reported to ICE." A 2017 DHS Office of the Inspector General report explains, "According to SRMS guidance, ERO field office staff, including FODs, must use SRMS to report segregation placement data that falls under the ICE directive’s reporting requirements." These requirements include segregation placements affecting people with "special vulnerabilities" including mental health diagnoses; and placements exceeding 14 days during any 21-day period.<%= fn('OIG-17-119, [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), September 29, 2017.') %> However, elsewhere ICE has stated "SRMS provides a centralized historical record of all segregation cases".<%= fn('[ICE 2017 Budget Justification](https://www.thisweekinimmigration.com/uploads/6/9/2/2/69228175/fy17budgetcongressionaljustificationdhs2.pdf), p. 54.') %>
 
-A comparison of SRMS data released via FOIA with other sources noting segregation placement counts suggests that under-reporting may be extensive. For example, SRMS data released to UWCHR under FOIA reports 98 total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports 219 total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of 614) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
+#### Comparisons of SRMS data with published government reports
 
-### Dataset Description and Analysis
+A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(uwchr.set_index('placement_date').loc['2013-06-01':'2014-06-26']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= itn(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
 
-```python, data_import_and_global_vars, echo=True
+Another source of government data offering a comparison with SRMS records is a 2017 DHS Office of Inspector General report [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), which noted issues with segregation reporting.<%= fn('OIG-17-119 [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf) (September 29, 2017)') %> The report's methodology is described as follows:
 
-csv_opts = {'sep': '|',
-            'quotechar': '"',
-            'compression': 'gzip',
-            'encoding': 'utf-8'}
+"We [...] analyzed SRMS data from October 1, 2015, to June 30, 2016, which showed 713 segregation placements for detainees with mental health conditions — 272 disciplinary instances and 441 administrative instances. Some detainees were segregated multiple times. From the 713 segregation placements in this time period that were in SRMS, we selected and reviewed a judgmental sample of 189 instances of segregation involving 127 detainees with mental health conditions."
 
-uwchr = pd.read_csv('input/uwchr.csv.gz',
-                 parse_dates=['placement_date', 'release_date'],
-                 **csv_opts)
+We can use national SRMS logs covering this time period, released by the Project on Government Oversight, to attempt to replicate this methodology:
 
-assert len(uwchr[uwchr['release_date'] < uwchr['placement_date']]) == 0
-assert len(uwchr) == len(set(uwchr['tracking_number']))
-assert sum(uwchr['placement_date'].isnull()) == 0
+```python, oig_test, echo=True
+
+oig_frame_start = '2015-10-01'
+oig_frame_end = '2016-06-30'
+
+oig_frame = pogo.set_index('placement_date')[oig_frame_start:oig_frame_end]
+
+mental_illness_true = ['Yes', 'Mental Illness', 'Serious Mental Illness']
 
 ```
 
-The dataset released to UWCHR includes <%= len(uwchr) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names and A-numbers are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements.
+Nationwide, during the period analyzed by the DHS OIG, the POGO dataset includes <%= sum(oig_frame['mental_illness'].isin(mental_illness_true)) %> SRMS records indicating mental illness; fewer than reported by the DHS OIG.
+
+These examples suggest that not only do the SRMS logs significantly under-count total segregation placements, SRMS logs released by ICE may not be complete.
+
+### Dataset Description and Analysis
+
+The dataset released to UWCHR includes <%= len(uwchr) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names, A-numbers, are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements; however, comment fields excluded from the public version of this dataset make clear that some represent repeat placements.
 
 The earliest placement date (start of solitary stay) was <%= print(uwchr.placement_date.min().strftime('%B %-d, %Y')) %> and the latest placement date was <%= print(uwchr.placement_date.max().strftime('%B %-d, %Y')) %>. The earliest release date (end of solitary stay) was <%= print(uwchr.release_date.min().strftime('%B %-d, %Y')) %> and the latest release date was <%= print(uwchr.release_date.max().strftime('%B %-d, %Y')) %>.
 
@@ -330,44 +377,9 @@ ax = sns.boxplot(data=uwchr, x='placement_year', y='log_days_solitary', hue='det
 
 <br>
 
-### Selected qualitative descriptions of solitary placements
-
-The dataset released to UWCHR includes fields with more detailed information about solitary placements. In some cases this information raises additional human rights concerns. In other cases, this information is poorly redacted and may be considered sensitive.
-
-We note four records in March 2014 with `disciplinary_infraction` comments relating to "inciting others in group demonstration" or "inciting others to conduct work stoppage and strike". Each of these individuals was placed in solitary for between 16 and 25 days. We also note an April 2014 record with `placement_reason` "Hunger Strike", with a solitary placement of 4 days. This is the only record with this placement reason for NWDC; other facilities nationally have also used this designation. These records coincide with the first known hunger strike wave at NWDC, as documented by La Resistencia.
-
-Another record of a 115-day solitary placement beginning in February 2018 includes information in the `additional_comments_export` field staying that the individual "was temporarily housed in medical isolation because of being on a self-declared hunger strike." This record is also designated with `placement_reason` "Facility Security Threat: Other" despite no indication in the comment field of any threatening behavior.
-
-One record notes a 118-day solitary placement beginning in April 2014 with `placement_reason` "Protective Custody: Lesbian, Gay, Bisexual, Transgender (LGBT)". Additional comments note that detainee is transgender. Solitary placement is classified as detainee requested.
-
-Nine records have `placement_reason` "Mental Illness".
-
-Multiple records classified with `placement_reason_type` "Facility Security Threat" include comments noting that they were initiated as disciplinary placements.
-
 ## National solitary confinement data
 
 At least two reports based on national data regarding the use of solitary confinement in immigration detention have been published, by the Internaional Consortium of Investigative Journalists (ICIJ) and the Project on Government Oversight (POGO). The data underlying these reports cover an overlapping time period also covered by the data released to UWCHR by ICE. However, due to the lack of unique identifiers for each solitary confinemnet placement, it is not possible to merge these datasets into a single national timeline.
-
-```python, national_datasets_setup, echo=False
-
-icij = pd.read_csv('input/icij.csv.gz',
-                   parse_dates=['placement_date', 'release_date'],
-                   **csv_opts)
-icij['facility'] = icij['facility'].str.strip()
-icij_nwdc_str = icij[icij['state'] == 'WA']['facility'].unique()[0]
-icij_nwdc = icij['facility'] == icij_nwdc_str
-
-pogo = pd.read_csv('input/pogo.csv.gz',
-                   parse_dates=['placement_date', 'release_date'],
-                   **csv_opts)
-
-pogo['record_id'] = range(len(pogo))
-pogo = pogo.rename({'length_of_solitary_confinement_(pogo_calculation)': 'days_solitary'}, axis=1)
-pogo_nwdc_str = 'TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)'
-pogo_nwdc = pogo['facility'] == pogo_nwdc_str
-pogo['nwdc'] = pogo['facility'] == pogo_nwdc_str
-
-```
 
 ### ICIJ
 
@@ -433,16 +445,16 @@ fig, ax = plt.subplots(figsize=(10,6))
 color=iter(cm.viridis_r(np.linspace(0,1,15)))
 grey=iter(cm.Greys(np.linspace(0,1,100)))
 
-for facil in top_15_facil:
-# for facil in data['facility'].unique():
-    if facil == pogo_nwdc_str:
-        data_sub = data[data['facility'] == facil]
-        data_sub['mean_days_solitary'].name = facil
+for f in top_15_f:
+# for f in data['facility'].unique():
+    if f == pogo_nwdc_str:
+        data_sub = data[data['facility'] == f]
+        data_sub['mean_days_solitary'].name = f
         c=next(color)
         ax.plot(data_sub['mean_days_solitary'], color=c, alpha=1, linewidth=3)
     else:
-        data_sub = data[data['facility'] == facil]
-        data_sub['mean_days_solitary'].name = facil
+        data_sub = data[data['facility'] == f]
+        data_sub['mean_days_solitary'].name = f
         c=next(color)
         ax.plot(data_sub['mean_days_solitary'], color=c, alpha=.9)
 
@@ -497,9 +509,7 @@ Placement reason categories longer on average at NWDC than at other detention fa
 
 ### Facility average length of stay
 
-```python, alos, echo=False
-
-facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
+```python, alos_setup, echo=False
 
 adp_cols = ['fy15_adp', 'fy16_adp', 'fy17_adp', 'fy18_adp']
 
@@ -510,9 +520,6 @@ alos = facil.set_index('detloc')[alos_cols]
 nwdc_alos_percent = alos.rank(pct=True, ascending=True).loc['CSCNWWA']
 
 nwdc_alos_percent_mean = nwdc_alos_percent.mean()
-
-# Drop ORR facilities? Outliers?
-
 
 ```
 
