@@ -59,8 +59,8 @@ def tab_label():
 
 ```
 
-# Use of Solitary Confinement at Northwest ICE Processing Center<%= fn('This report interchangably uses the titles "Northwest ICE Processing Center" (the title currently employed by ICE), "Tacoma ICE Processing Center" (used in some internal ICE records), and "Northwest Detention Center (NWDC)" (the former title used publicly during the time period covered by this report) to refer to the immigration prison in Tacoma, Washington privately owned and operated by GEO Group on behalf of ICE. The title "Tacoma ICE Processing Center" is also used in some internal ICE documents; along with the corresponding `DETLOC` code "CSCNWWA". This report uses the term "solitary confinement" to describe practices named by ICE and GEO Group as "administrative segregation" or "disciplinary segregation".') %>
-## UW Center for Human Rights preliminary report, January 2020
+# Data Sources on Use of Solitary Confinement at Northwest ICE Processing Center
+## UW Center for Human Rights
 
 Data analyzed:
 
@@ -117,7 +117,7 @@ Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have n
 
 ### Comparisons of SRMS data with published government reports
 
-A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(uwchr.set_index('placement_date').loc['2013-06-01':'2014-06-26']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= itn(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
+A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(uwchr.set_index('placement_date').loc['2013-06-01':'2014-06-26']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= int(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
 
 Another source of government data offering a comparison with SRMS records is a 2017 DHS Office of Inspector General report [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), which noted issues with segregation reporting.<%= fn('OIG-17-119 [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf) (September 29, 2017)') %> The report's methodology is described as follows:
 
@@ -140,11 +140,11 @@ Nationwide, during the period analyzed by the DHS OIG, the POGO dataset includes
 
 These examples suggest that not only do the SRMS logs significantly under-count total segregation placements, SRMS logs released by ICE may not be complete.
 
-### Dataset Structure and Cleaning Process
+## Dataset Structure and Cleaning Process
 
 In a separate process, the document released by ICE (`2018-ICFO-00515 Highlighted_EDIT.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed. The resulting file, `2018-ICFO-00515 Highlighted_PUBLIC.csv.gz`, after cleaning and standardization documented in [`clean/`](https://github.com/UWCHR/nwdc-seg/tree/master/clean), is described and analyzed in the continuing sections.
 
-### Dataset Description and Analysis
+## Dataset Description and Analysis
 
 The dataset released to UWCHR includes <%= len(uwchr) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names, A-numbers, are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements; however, comment fields excluded from the public version of this dataset make clear that some represent repeat placements.
 
