@@ -44,6 +44,10 @@ uwchr_drop:
   - 'Date of Birth'
   - 'Path'
 
+mental_illness:
+  'Yes': 'Mental Illness'
+  'No': 'None'
+
 placement_types:
   'Disciplinary': 'Disciplinary'
   'Facility Security Threat: Due to Seriousness of Criminal Conviction': 'Facility Security Threat'

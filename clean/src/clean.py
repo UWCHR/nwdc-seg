@@ -61,6 +61,9 @@ if __name__ == "__main__":
     facil = pd.read_csv(args.facilities)
     facil_detloc = dict(zip(facil['facility'], facil['detloc']))
 
+    mental_illness = cleanrules['mental_illness']
+    df['mental_illness'] = df['mental_illness'].replace(mental_illness)
+
     df['detloc'] = df['facility'].replace(facil_detloc)
     df = df.rename(cleanrules['rename'], axis=1)
 
