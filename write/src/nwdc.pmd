@@ -14,6 +14,7 @@ import datetime as dt
 import yaml
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
+import matplotlib.ticker as mtick
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator, NullLocator)
 import matplotlib.dates as mdates
@@ -213,12 +214,12 @@ plt.show()
 
 <br>
 
-### Length of Solitary Placements
+### Length of Segregation Placements
 
 ```python, solitary_length_setup, echo=False
 
-null_release = sum(uwchr['release_date'].isnull())
-uwchr['release_date'] = uwchr['release_date'].fillna(uwchr['release_date'].max())
+null_release = uwchr['release_date'].isnull()
+
 uwchr['solitary_length'] = uwchr['release_date'] - uwchr['placement_date']
 uwchr['days_solitary'] = uwchr['solitary_length'] / np.timedelta64(1, 'D')
 uwchr.loc[:, 'log_days_solitary'] = np.log(uwchr['days_solitary'])
@@ -226,13 +227,13 @@ assert sum(uwchr['days_solitary'] < 0) == 0
 
 ```
 
-<%= null_release %> records do not have a "Release Date" specified. All of these records are segregation placements beginning during the latter portion of the dataset, which suggests that these refer to individuals who remained in solitary confinement at the time of production of this dataset.<%= fn('No records are missing "Placement Date" values, and no record has a "Release Date" preceding its "Placement Date".') %> For purposes of analysis, we set the release date for individuals still in solitary confinement at the time of production of this dataset to that of the latest date represented in the dataset, allowing us to calculate minimum total solitary confinement length for all records.<%= fn('An alternative approach would be to exclude records with no release date from analysis. This results in a lower average solitary placement length.') %>
+<%= null_release.sum() %> records do not have a "Release Date" specified. All of these records are segregation placements beginning during the latter portion of the dataset, which suggests that these refer to individuals who remained in segregation at the time of production of this dataset.<%= fn('No records are missing "Placement Date" values, and no record has a "Release Date" preceding its "Placement Date".') %> For purposes of analysis of placement length, we exclude these records, leaving <%= len(uwchr[~null_release]) %> completed solitary placements.
 
-The maximum completed solitary placement length was <%= int(uwchr['days_solitary'].max()) %> days. The average solitary placement length was <%= round(uwchr['days_solitary'].mean(),2) %> days and the median solitary placement length was <%= int(uwchr['days_solitary'].median()) %> days. The most common placement length was <%= int(uwchr['days_solitary'].mode()) %> days.
+The maximum completed Segregation placement length was <%= int(uwchr.loc[~null_release, 'days_solitary'].max()) %> days. The average Segregation placement length was <%= round(uwchr.loc[~null_release, 'days_solitary'].mean(),2) %> days and the median Segregation placement length was <%= int(uwchr.loc[~null_release, 'days_solitary'].median()) %> days. The most common placement length was <%= int(uwchr.loc[~null_release, 'days_solitary'].mode()) %> days.
 
-The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(uwchr['days_solitary'] <= 30) / len(uwchr) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(uwchr['days_solitary'] > 30) / len(uwchr) * 100, 2) %>% of placements were for more than 30 days.
+The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(uwchr['days_solitary'] <= 30) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(uwchr['days_solitary'] > 30) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for more than 30 days.
 
-<%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr) * 100, 2) %>% of placements were for 15 days or less, and <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, solitary confinement for more than 15 consecutive days is prohibited.
+<%= sum(uwchr['days_solitary'] <= 15) %>, or <%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for 15 days or less, and <%= sum(uwchr['days_solitary'] > 15) %>, or <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, segregation for more than 15 consecutive days is prohibited.
 
 The following histogram chart displays the distribution of placement lengths (excluding outliers).
 
@@ -242,7 +243,7 @@ The following histogram chart displays the distribution of placement lengths (ex
 max = 780
 step = 30
 num_bins = np.arange(0,max,step)
-data = uwchr['days_solitary']
+data = uwchr.loc[~null_release, 'days_solitary']
 # the histogram of the data
 n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
  
@@ -252,7 +253,7 @@ plt.xticks(np.arange(0, max, step=step*2), rotation=45)
 plt.ylabel('Placement count')
 plt.yticks(np.arange(0, 200, step=20))
 plt.ylim(-5, 200)
-plt.title('Solitary placement length')
+plt.title('Segregation placement length')
  
 # Tweak spacing to prevent clipping of ylabel
 plt.subplots_adjust(left=0.15) 
@@ -279,16 +280,26 @@ placements = placements.fillna('')
 
 Each solitary placement is categorized with one of <%= len(set(uwchr['placement_reason'])) %> placement reasons (including "Other"). As mentioned above, the maximum solitary length for most "Disciplinary" placements is 30 days.
 
-We can also aggregate these placement reasons into broader categories for comparison, as in the following figure (which uses a natural log transform of `days_solitary` to better show the distribution of values):
+We can also aggregate these placement reasons into broader categories for comparison, as in the following figure:
 
-**<%= fig_label() %>: Distribution of variable** `log_days_solitary` **grouped by** `placement_reason_type`
+**<%= fig_label() %>: Distribution of variable** `days_solitary` **by** `placement_reason_type`
 
-```python, placement_reason_chart, echo=False
+```python, placement_reason_chart, echo=False, fig=True, width='800px'
 
-order = uwchr.groupby(by=["placement_reason_type"])["log_days_solitary"].median().sort_values(ascending=False).index
+order = uwchr.groupby(by=["placement_reason_type"])["days_solitary"].median().sort_values(ascending=False).index;
 
-ax = sns.boxplot(data=uwchr, x="placement_reason_type", y="log_days_solitary", order=order)
-ax = ax.set_xticklabels(ax.get_xticklabels(),rotation=90);
+fig, ax = plt.subplots(figsize=(7, 6));
+ax.set_xscale("log");
+ax.xaxis.set_major_formatter(mtick.ScalarFormatter());
+
+fig = sns.boxplot(data=uwchr, x="days_solitary", y="placement_reason_type", order=order, palette="vlag");
+
+fig = sns.swarmplot(data=uwchr, x="days_solitary", y="placement_reason_type", order=order,
+              size=2, color=".3", linewidth=0);
+
+ax.xaxis.grid(True)
+ax.set(ylabel="")
+sns.despine(trim=True, left=True)
 
 ```
 
@@ -298,24 +309,52 @@ As seen in the following table describing the lenth of solitary placement for ea
 
 <% print(placements.to_html(border=0, index=True)) %>
 
-Application of different placement reason categories appears to vary over time, as seen in the following figure. Note for example the frequent "Disciplinary" placements during calendar years 2013-2014, and the clusters of "Facility Security Threat" placements in 2017-Q2 and 2018-Q1.
+Application of different placement reason categories appears to vary over time, as seen in the following figure:
 
-**<%= fig_label() %>: NWDC solitary placement reasons and stay length (log transform) over time**
+**<%= fig_label() %>: NWDC segregation placements by reason and stay length over time**
 
 ```python, placement_reason_timeline, echo=False, fig=True, width='1200px'
 
-uwchr['placement_reason_type'] = uwchr['placement_reason_type'].astype('category')
+fig = plt.figure(figsize=(10,6))
+ax = fig.add_subplot(111)
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF', which='both')
+ax.xaxis.grid(color='#FFFFFF')
 
-uwchr['placement_date_int'] = uwchr['placement_date'].astype(int)
+to_plot = 'placement_reason_type'
 
-lm = sns.lmplot(data=uwchr, x='placement_date_int', y='log_days_solitary', hue='placement_reason_type', height=5,
-               aspect=2, fit_reg=False)
+values = ['Disciplinary',
+        'Pending Disciplinary',
+        'Protective Custody',
+        'Facility Security Threat',
+        'Hunger Strike',
+        'Medical',
+        'Mental Illness',
+        'Other']
 
-ax = lm.axes;
+for v in values:
+    data = uwchr[uwchr[to_plot] == v]
+    x=data.loc[:, 'placement_date'].astype(int)
+    y=data.loc[:,'days_solitary']
+    plt.scatter(x, y, s=20, alpha=.8)
 
-xticks = ax[0,0].get_xticks();
-xticks_dates = [str(f'{pd.to_datetime(x).year}-Q{pd.to_datetime(x).quarter}') for x in xticks];
-ax = ax[0,0].set_xticklabels(xticks_dates, rotation=45);
+plt.xticks(pd.date_range(start='2013-01-01', end='2018-01-01', freq='AS-OCT').astype(int))
+xticks = ax.get_xticks()
+xticks_dates = [str(f'FY{pd.to_datetime(x).year}') for x in xticks]
+ax.set_xticklabels(xticks_dates)
+plt.xlabel('Placement date', fontsize=12)
+
+plt.yscale('log')
+plt.ylabel('Stay length (days)', fontsize=12)
+ax.yaxis.set_major_formatter(mtick.ScalarFormatter())
+
+plt.legend(values, title=to_plot, loc='upper left', bbox_to_anchor=(1, 1))
+
+plt.title('Stay length of reported NWDC segregation placements', fontsize=16)
+plt.show()
+plt.close(fig=fig)
+del fig, ax
 
 ```
 
@@ -341,7 +380,7 @@ Each placement is coded as either "Facility-Initiated" (<%= len(uwchr[~detainee_
 
 Average stay lengths for "Detainee Request" placements were considerably longer than for "Facility-Initiated" placements (<%= round(uwchr.loc[detainee_requested, 'days_solitary'].mean(), 2) %> versus <%= round(uwchr.loc[~detainee_requested, 'days_solitary'].mean(), 2) %>) days; however, we note that stay lengths vary greatly and fluctuate over time, as seen in the following figure.
 
-**<%= tab_label() %>: Description of variable** `log_days_solitary` **grouped by** `placement_year` **and** `detainee_request`
+**<%= fig_label() %>: Distribution of variable** `log_days_solitary` **grouped by** `placement_year` **and** `detainee_request`
 
 
 ```python, nwdc_detainee_request_by_year_chart, echo=False
