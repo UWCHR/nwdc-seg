@@ -233,11 +233,11 @@ The maximum completed Segregation placement length was <%= int(uwchr.loc[~null_r
 
 The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(uwchr['days_solitary'] <= 30) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(uwchr['days_solitary'] > 30) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for more than 30 days.
 
-<%= sum(uwchr['days_solitary'] <= 15) %>, or <%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for 15 days or less, and <%= sum(uwchr['days_solitary'] > 15) %>, or <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, segregation for more than 15 consecutive days is prohibited.
+<%= sum(uwchr['days_solitary'] <= 15) %>, or <%= round(sum(uwchr['days_solitary'] <= 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for 15 days or less, and <%= sum(uwchr['days_solitary'] > 15) %>, or <%= round(sum(uwchr['days_solitary'] > 15) / len(uwchr[~null_release]) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, segregation for more than 15 consecutive days is prohibited. Note that ICE regulations do not require reporting of all segregation placements, as described above.
 
-The following histogram chart displays the distribution of placement lengths (excluding outliers).
+The following histogram chart displays the distribution of length of stay for completed segregation placements (excluding outliers).
 
-**<%= fig_label() %>: Distribution of solitary confinment placement lengths (`days_solitary`) at NWDC**
+**<%= fig_label() %>: Distribution of length of completed segregation placements (`days_solitary`) at NWDC**
 
 ```python, solitary_length_hist, echo=False
 max = 780
@@ -253,7 +253,7 @@ plt.xticks(np.arange(0, max, step=step*2), rotation=45)
 plt.ylabel('Placement count')
 plt.yticks(np.arange(0, 200, step=20))
 plt.ylim(-5, 200)
-plt.title('Segregation placement length')
+plt.title('Segregation placement length (NWDC)')
  
 # Tweak spacing to prevent clipping of ylabel
 plt.subplots_adjust(left=0.15) 
@@ -309,7 +309,7 @@ As seen in the following table describing the lenth of solitary placement for ea
 
 <% print(placements.to_html(border=0, index=True)) %>
 
-Application of different placement reason categories appears to vary over time, as seen in the following figure:
+Application of different placement reason categories appears to vary over time, as seen in the following figure. Note the frequent disciplinary placements around FY2013, and the cluster of long "Facility Security Threat" placements during FY2016.
 
 **<%= fig_label() %>: NWDC segregation placements by reason and stay length over time**
 
@@ -346,7 +346,7 @@ ax.set_xticklabels(xticks_dates)
 plt.xlabel('Placement date', fontsize=12)
 
 plt.yscale('log')
-plt.ylabel('Stay length (days)', fontsize=12)
+plt.ylabel('Stay length (days, log scale)', fontsize=12)
 ax.yaxis.set_major_formatter(mtick.ScalarFormatter())
 
 plt.legend(values, title=to_plot, loc='upper left', bbox_to_anchor=(1, 1))
@@ -357,6 +357,54 @@ plt.close(fig=fig)
 del fig, ax
 
 ```
+
+<br>
+
+### Mental illness
+
+```python, nwdc_mental_illness_table, echo=False
+
+mental_illness = uwchr.groupby(by=["mental_illness"])["days_solitary"].describe().sort_values(by='count', ascending=False)
+mental_illness['count'] = mental_illness['count'].astype(int)
+mental_illness['min'] = mental_illness['min'].astype(int)
+mental_illness['max'] = mental_illness['max'].astype(int)
+mental_illness['mean'] = round(mental_illness['mean'], 2)
+mental_illness['std'] = round(mental_illness['std'], 2)
+mental_illness = mental_illness.fillna('')
+
+```
+
+While "Mental Illness" is occasionally employed as a `placement_reason` value, all records also include a `mental_illness` field indicating whether the detained person has been diagnosed with a mental illness or serious mental illness. <%= sum(uwchr['mental_illness'] == 'Mental Illness') %>, or <%= round(sum(uwchr['mental_illness'] == 'Mental Illness') / len(uwchr) * 100, 2) %>% of records indicate a "Mental Illness" diagnosis; <%= sum(uwchr['mental_illness'] == 'Serious Mental Illness') %>, or <%= round(sum(uwchr['mental_illness'] == 'Serious Mental Illness') / len(uwchr) * 100, 2) %>% of records indicate a diagnosis of "Serious Mental Illness". Remaining records indicate no mental illness diagnosis.
+
+As shown in the preceding section, <%= sum(uwchr['placement_reason'] == "Mental Illness") %> records indicate a `placement_reason` of "Mental Illness". Of these records, <%= sum(uwchr[uwchr['placement_reason'] == 'Mental Illness']['mental_illness'] == 'None') %> indicate a `mental_llness` value of "None".
+
+**<%= tab_label() %>: Description of variable** `mental_illness` **grouped by** `placement_reason`
+
+<% print(mental_illness.to_html(border=0, index=True)) %>
+
+
+**<%= fig_label() %>: Distribution of variable** `days_solitary` **by** `mental_illness`
+
+```python, mental_illness_chart, echo=False, fig=True, width='800px'
+
+order = ['None', 'Mental Illness', 'Serious Mental Illness']
+
+fig, ax = plt.subplots(figsize=(7, 6));
+ax.set_xscale("log");
+ax.xaxis.set_major_formatter(mtick.ScalarFormatter());
+
+fig = sns.boxplot(data=uwchr, x="days_solitary", y="mental_illness", order=order, palette="vlag");
+
+fig = sns.swarmplot(data=uwchr, x="days_solitary", y="mental_illness", order=order,
+              size=2, color=".3", linewidth=0);
+
+ax.xaxis.grid(True)
+ax.set(ylabel="")
+sns.despine(trim=True, left=True)
+
+```
+
+
 
 <br>
 
