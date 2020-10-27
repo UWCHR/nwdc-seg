@@ -18,7 +18,10 @@ output/nwdc.html: \
 		frozen/alos_dict.yaml \
 		frozen/adp_dict.yaml \
 		frozen/facil-list.csv.gz \
-		input/uwchr.csv.gz \
+		input/srms-1.csv.gz \
+		input/srms-2.csv.gz \
+		input/rhu.csv.gz \
+		input/smu.csv.gz \
 		input/pogo.csv.gz \
 		input/icij.csv.gz
 	pweave src/nwdc.pmd -f md2html -o output/nwdc.html
