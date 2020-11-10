@@ -79,7 +79,7 @@ csv_opts = {'sep': '|',
             'encoding': 'utf-8'}
 
 # Import and test asserts for UWCHR segregation log dataset
-uwchr = pd.read_csv('input/uwchr.csv.gz',
+uwchr = pd.read_csv('input/srms-1.csv.gz',
                  parse_dates=['placement_date', 'release_date'],
                  **csv_opts)
 
