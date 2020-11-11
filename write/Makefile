@@ -8,22 +8,28 @@
 .PHONY: all clean
 
 all: \
-	output/nwdc.html
+	output/nwdc-srms-1.html \
+	output/index.html
 
 clean:
 	rm -r output/*
 
-output/nwdc.html: \
-		src/nwdc.pmd \
+output/nwdc-srms-1.html: \
+		src/nwdc-srms-1.pmd \
 		frozen/alos_dict.yaml \
 		frozen/adp_dict.yaml \
 		frozen/facil-list.csv.gz \
 		input/srms-1.csv.gz \
-		input/srms-2.csv.gz \
 		input/rhu.csv.gz \
 		input/smu.csv.gz \
 		input/pogo.csv.gz \
 		input/icij.csv.gz
-	pweave src/nwdc.pmd -f md2html -o output/nwdc.html
+	pweave src/nwdc-srms-1.pmd -f md2html -o output/nwdc-srms-1.html
+
+output/index.html: \
+		src/index.pmd \
+		output/nwdc-srms-1.html
+	pweave src/index.pmd -f md2html -o output/index.html
+	cp -r output/* ../docs/.
 
 # done.
