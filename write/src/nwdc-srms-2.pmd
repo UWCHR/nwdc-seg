@@ -1,7 +1,7 @@
 ```python, header, echo=False
 # Author: University of Washington Center for Human Rights
-# Title: ICE SRMS Data on Use of Solitary Confinement at Northwest ICE Processing Center, 1st Installment Feb. 2019
-# Date: 2020-05-13
+# Title: ICE SRMS Data on Use of Solitary Confinement at Northwest ICE Processing Center, 2nd Installment Aug. 2020
+# Date: 2020-11-11
 # License: GPL 3.0 or greater
 ```
 
@@ -60,12 +60,12 @@ def tab_label():
 
 ```
 
-# ICE SRMS Data on Use of Solitary Confinement at Northwest ICE Processing Center, 1st Installment Feb. 2019
+# ICE SRMS Data on Use of Solitary Confinement at Northwest ICE Processing Center, 2nd Installment Aug. 2020
 ## UW Center for Human Rights
 
 Data analyzed:
 
-1. ICE SRMS dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment).
+1. ICE SRMS dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on August 12, 20202 (second installment).
 2. ICE SRMS dataset of national solitary confinement placements analyzed by International Consortium of Investigative Journalists (Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, ["Thousands of Immigrants Suffer In US Solitary Confinement"]((https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/)), ICIJ, May 21 2019)
 3. ICE SRMS dataset of national solitary confinement placements analyzed by Project on Government Oversight (POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14 2019)
 4. Dataset of characteristics of ICE detention facilities obtained via FOIA by National Immigrant Justice Center (NIJC, ["
@@ -79,13 +79,13 @@ csv_opts = {'sep': '|',
             'encoding': 'utf-8'}
 
 # Import and test asserts for UWCHR segregation log dataset
-srms1 = pd.read_csv('write/input/srms-1.csv.gz',
+srms2 = pd.read_csv('write/input/srms-2.csv.gz',
                  parse_dates=['placement_date', 'release_date'],
                  **csv_opts)
 
-assert len(srms1[srms1['release_date'] < srms1['placement_date']]) == 0
-assert len(srms1) == len(set(srms1['tracking_number']))
-assert sum(srms1['placement_date'].isnull()) == 0
+assert len(srms2[srms2['release_date'] < srms2['placement_date']]) == 0
+assert len(srms2) != len(set(srms2['tracking_number'])) # Tracking number redacted
+assert sum(srms2['placement_date'].isnull()) == 0
 
 # Import ICIJ segregation log dataset
 icij = pd.read_csv('write/input/icij.csv.gz',
@@ -118,7 +118,7 @@ Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have n
 
 ### Comparisons of SRMS data with published government reports
 
-A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(srms1.set_index('placement_date').loc['2013-06-01':'2014-06-26']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= int(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
+A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(srms2.set_index('placement_date').loc['2013-06-01':'2014-06-30']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= int(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
 
 Another source of government data offering a comparison with SRMS records is a 2017 DHS Office of Inspector General report [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), which noted issues with segregation reporting.<%= fn('OIG-17-119 [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf) (September 29, 2017)') %> The report's methodology is described as follows:
 
@@ -143,36 +143,36 @@ These examples suggest that not only do the SRMS logs significantly under-count 
 
 ## Dataset Structure and Cleaning Process
 
-In a separate process, the document released by ICE (`2018-ICFO-00515 Highlighted_EDIT.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed; and minimally cleaned. The resulting file, `srms-1.csv.gz`, is described and analyzed in the continuing sections. Code for this process is available for review upon request.
+In a separate process, the document released by ICE (`2019-ICLI-00003_-_SRMS_Report_from_CM_-_NWDC_Redacted.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed; and minimally cleaned. The resulting file, `srms-2.csv.gz`, is described and analyzed in the continuing sections. Code for this process is available for review upon request.
 
 ## Dataset Description and Analysis
 
-The dataset released to UWCHR includes <%= len(srms1) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names, A-numbers, are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements; however, comment fields excluded from the public version of this dataset make clear that some represent repeat placements.
+The dataset released to UWCHR includes <%= len(srms2) %> records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names, A-numbers, are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements; however, comment fields excluded from the public version of this dataset make clear that some represent repeat placements.
 
-The earliest placement date (start of solitary stay) was <%= print(srms1.placement_date.min().strftime('%B %-d, %Y')) %> and the latest placement date was <%= print(srms1.placement_date.max().strftime('%B %-d, %Y')) %>. The earliest release date (end of solitary stay) was <%= print(srms1.release_date.min().strftime('%B %-d, %Y')) %> and the latest release date was <%= print(srms1.release_date.max().strftime('%B %-d, %Y')) %>.
+The earliest placement date (start of solitary stay) was <%= print(srms2.placement_date.min().strftime('%B %-d, %Y')) %> and the latest placement date was <%= print(srms2.placement_date.max().strftime('%B %-d, %Y')) %>. The earliest release date (end of solitary stay) was <%= print(srms2.release_date.min().strftime('%B %-d, %Y')) %> and the latest release date was <%= print(srms2.release_date.max().strftime('%B %-d, %Y')) %>.
 
 
 ```python, country_of_citizenship_table, echo=False
 
-citizenship = srms1['country_of_citizenship'].value_counts()
+citizenship = srms2['country_of_citizenship'].value_counts()
 top_5 = pd.DataFrame(citizenship.head(5))
-all_others = srms1[~srms1['country_of_citizenship'].isin(list(top_5.index))]
+all_others = srms2[~srms2['country_of_citizenship'].isin(list(top_5.index))]
 top_5.loc['ALL OTHERS', 'country_of_citizenship'] = len(all_others)
 top_5['country_of_citizenship'] = top_5['country_of_citizenship'].astype(int)
 top_5 = top_5.rename({'country_of_citizenship': 'NWDC Solitary Placements'}, axis=1)
 top_5.index = top_5.index.str.title()
 top_5.index.name = 'Country of Citizenship'
 
-#print(srms1['gender'].value_counts(dropna=False).head(10))
+#print(srms2['gender'].value_counts(dropna=False).head(10))
 
 ```
 
 ```python, placement_data, echo=False
 
-g_monthly = srms1.set_index('placement_date').groupby(pd.Grouper(freq='MS'))
-g_monthly['tracking_number'].nunique().resample('AS').mean()
+g_monthly = srms2.set_index('placement_date').groupby(pd.Grouper(freq='MS'))
+g_monthly['tracking_number'].count().resample('AS').mean()
 
-data = g_monthly['tracking_number'].nunique()
+data = g_monthly['tracking_number'].count()
 
 ```
 
@@ -209,7 +209,7 @@ plt.show();
 
 ```
 
-<%= sum(srms1['gender'] == 'Male') %> people placed in solitary were male, <%= sum(srms1['gender'] == 'Female') %> were female. People placed in solitary confinement at NWDC were from <%= len(set(srms1['country_of_citizenship'])) %> countries. The top 5 countries of citizenship are listed in Table 1 below.
+<%= sum(srms2['gender'] == 'Male') %> people placed in solitary were male, <%= sum(srms2['gender'] == 'Female') %> were female. People placed in solitary confinement at NWDC were from <%= len(set(srms2['country_of_citizenship'])) %> countries. The top 5 countries of citizenship are listed in Table 1 below.
 
 **<%= tab_label() %>: Top five countries of citizenship of detainees placed in solitary confinement at NWDC**
 
@@ -221,49 +221,49 @@ plt.show();
 
 ```python, solitary_length_setup, echo=False
 
-null_release = srms1['release_date'].isnull()
+null_release = srms2['release_date'].isnull()
 
-srms1['solitary_length'] = srms1['release_date'] - srms1['placement_date']
-srms1['days_solitary'] = srms1['solitary_length'] / np.timedelta64(1, 'D')
-srms1.loc[:, 'log_days_solitary'] = np.log(srms1['days_solitary'])
-assert sum(srms1['days_solitary'] < 0) == 0
+srms2['solitary_length'] = srms2['release_date'] - srms2['placement_date']
+srms2['days_solitary'] = srms2['solitary_length'] / np.timedelta64(1, 'D')
+srms2.loc[:, 'log_days_solitary'] = np.log(srms2['days_solitary'])
+assert sum(srms2['days_solitary'] < 0) == 0
 
 
 ```
 
-<%= null_release.sum() %> records do not have a "Release Date" specified. All of these records are segregation placements beginning during the latter portion of the dataset, which suggests that these refer to individuals who remained in segregation at the time of production of this dataset.<%= fn('No records are missing "Placement Date" values, and no record has a "Release Date" preceding its "Placement Date".') %> For purposes of analysis of placement length, we exclude these records, leaving <%= len(srms1[~null_release]) %> completed solitary placements.
+<%= null_release.sum() %> records do not have a "Release Date" specified. All of these records are segregation placements beginning during the latter portion of the dataset, which suggests that these refer to individuals who remained in segregation at the time of production of this dataset.<%= fn('No records are missing "Placement Date" values, and no record has a "Release Date" preceding its "Placement Date".') %> For purposes of analysis of placement length, we exclude these records, leaving <%= len(srms2[~null_release]) %> completed solitary placements.
 
-The maximum completed segregation placement length was <%= int(srms1.loc[~null_release, 'days_solitary'].max()) %> days. The average segregation placement length was <%= round(srms1.loc[~null_release, 'days_solitary'].mean(),2) %> days and the median Segregation placement length was <%= int(srms1.loc[~null_release, 'days_solitary'].median()) %> days. The most common placement length was <%= int(srms1.loc[~null_release, 'days_solitary'].mode()) %> days.
+The maximum completed segregation placement length was <%= int(srms2.loc[~null_release, 'days_solitary'].max()) %> days. The average segregation placement length was <%= round(srms2.loc[~null_release, 'days_solitary'].mean(),2) %> days and the median segregation placement length was <%= int(srms2.loc[~null_release, 'days_solitary'].median()) %> days. The most common placement length was <%= int(srms2.loc[~null_release, 'days_solitary'].mode()) %> days.
 
-The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(srms1['days_solitary'] <= 30) / len(srms1[~null_release]) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(srms1['days_solitary'] > 30) / len(srms1[~null_release]) * 100, 2) %>% of placements were for more than 30 days.
+The median and mode values are close to ICE's maximum length of 30 days for most disciplinary segregation placements.<%= fn('See Section 2.12 "Special Management Units" in ICE&rsquo;s detention standards manual: <https://www.ice.gov/doclib/detention-standards/2011/2-12.pdf>') %> <%= round(sum(srms2['days_solitary'] <= 30) / len(srms2[~null_release]) * 100, 2) %>% of placements were for 30 days or less, and <%= round(sum(srms2['days_solitary'] > 30) / len(srms2[~null_release]) * 100, 2) %>% of placements were for more than 30 days.
 
-<%= sum(srms1['days_solitary'] <= 15) %>, or <%= round(sum(srms1['days_solitary'] <= 15) / len(srms1[~null_release]) * 100, 2) %>% of placements were for 15 days or less, and <%= sum(srms1['days_solitary'] > 15) %>, or <%= round(sum(srms1['days_solitary'] > 15) / len(srms1[~null_release]) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, segregation for more than 15 consecutive days is prohibited. Note that ICE regulations do not require reporting of all segregation placements, as described above.
+<%= sum(srms2['days_solitary'] <= 15) %>, or <%= round(sum(srms2['days_solitary'] <= 15) / len(srms2[~null_release]) * 100, 2) %>% of placements were for 15 days or less, and <%= sum(srms2['days_solitary'] > 15) %>, or <%= round(sum(srms2['days_solitary'] > 15) / len(srms2[~null_release]) * 100, 2) %>% of placements were for more than 15 days. Under the United Nations Standard Minimum Rules for the Treatment of Prisoners, segregation for more than 15 consecutive days is prohibited. Note that ICE regulations do not require reporting of all segregation placements, as described above.
 
 The following histogram chart displays the distribution of length of stay for completed segregation placements (excluding outliers).
 
 **<%= fig_label() %>: Distribution of length of completed segregation placements (`days_solitary`) at NWDC**
 
 ```python, solitary_length_hist, echo=False
-max = 780
+max = 720
 step = 30
 num_bins = np.arange(0,max,step)
-data = srms1.loc[~null_release, 'days_solitary']
+data = srms2.loc[~null_release, 'days_solitary']
 # the histogram of the data
 n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
  
-plt.plot()
+#plt.plot()
 plt.xlabel('Days')
 plt.xticks(np.arange(0, max, step=step*2), rotation=45)
 plt.ylabel('Placement count')
-plt.yticks(np.arange(0, 200, step=20))
-plt.ylim(-5, 200)
+plt.yticks(np.arange(0, 240, step=20))
+plt.ylim(-5, 240)
 #plt.title('Segregation placement length (NWDC)')
 
 # Tweak spacing to prevent clipping of ylabel
 plt.subplots_adjust(left=0.15) 
 
 txt='Data Source: ICE SRMS log released via FOIA\nFigure: UW Center for Human Rights'
-plt.figtext(1.1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+plt.figtext(1, -.1, txt, wrap=True, horizontalalignment='right', fontsize=8)
 
 plt.show();
 
@@ -271,7 +271,7 @@ plt.show();
 
 ```python, nwdc_placement_reason_table, echo=False
 
-placements = srms1.groupby(by=["placement_reason"])["days_solitary"].describe().sort_values(by='count', ascending=False)
+placements = srms2.groupby(by=["placement_reason"])["days_solitary"].describe().sort_values(by='count', ascending=False)
 placements['count'] = placements['count'].astype(int)
 placements['min'] = placements['min'].astype(int)
 placements['max'] = placements['max'].astype(int)
@@ -285,7 +285,7 @@ placements = placements.fillna('')
 
 ### Placement Reason
 
-Each solitary placement is categorized with one of <%= len(set(srms1['placement_reason'])) %> placement reasons (including "Other"). As mentioned above, the maximum solitary length for most "Disciplinary" placements is 30 days.
+Each solitary placement is categorized with one of <%= len(set(srms2['placement_reason'])) %> placement reasons (including "Other"). As mentioned above, the maximum solitary length for most "Disciplinary" placements is 30 days.
 
 We can also aggregate these placement reasons into broader categories for comparison, as in the following figure:
 
@@ -293,23 +293,24 @@ We can also aggregate these placement reasons into broader categories for compar
 
 ```python, placement_reason_chart, echo=False, fig=True, width='800px'
 
-order = srms1.groupby(by=["placement_reason_type"])["days_solitary"].median().sort_values(ascending=False).index;
+order = srms2.groupby(by=["placement_reason_type"])["days_solitary"].median().sort_values(ascending=False).index;
 
 fig, ax = plt.subplots(figsize=(7, 6));
 ax.set_xscale("log");
 ax.xaxis.set_major_formatter(mtick.ScalarFormatter());
 
-fig = sns.boxplot(data=srms1, x="days_solitary", y="placement_reason_type", order=order, palette="vlag");
+fig = sns.boxplot(data=srms2, x="days_solitary", y="placement_reason_type", order=order, palette="vlag");
 
-fig = sns.swarmplot(data=srms1, x="days_solitary", y="placement_reason_type", order=order,
+fig = sns.swarmplot(data=srms2, x="days_solitary", y="placement_reason_type", order=order,
               size=2, color=".3", linewidth=0);
 
 ax.xaxis.grid(True)
 ax.set(ylabel="")
+plt.xlim(.8, 1000)
 sns.despine(trim=True, left=True)
 
 txt = 'Data Source: ICE SRMS log released via FOIA\nFigure: UW Center for Human Rights';
-plt.figtext(1.1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12);
+plt.figtext(1.1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=8);
 plt.show();
 ```
 
@@ -325,7 +326,7 @@ Application of different placement reason categories varies over time, as seen i
 
 ```python, placement_reason_proportion, echo=False, fig=True, width='800px'
 
-data = srms1.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT')])['placement_reason_type'].value_counts().unstack()
+data = srms2.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT')])['placement_reason_type'].value_counts().unstack()
 data.index = [f'FY{x.year+1}' for x in data.index]
 
 totals = data.sum(axis=1).to_list()
@@ -345,15 +346,18 @@ data = data[['Disciplinary',
 data = data.fillna(0)
 
 fig, ax = plt.subplots(figsize=(10,6))
-# fig = data.plot(ax=ax, kind='bar', alpha=.3)
-fig = data.plot(ax=ax)
+
+fig = data.plot(ax=ax, kind='bar')
+#fig = data.plot(ax=ax)
 plt.legend(bbox_to_anchor=(1.04,1), loc='upper left', title='placement_reason_type')
 
 ax.yaxis.set_major_formatter(mtick.PercentFormatter())
-ax.set_ylim(-5,75)
-plt.ylabel('% of Placements', fontsize=12)
+ax.set_ylim(-5,105)
+ax.yaxis.grid(color='#DDDDDD')
 
+plt.ylabel('% of Placements', fontsize=12)
 plt.xlabel('Fiscal Year', fontsize=12)
+plt.xticks(rotation=90)
 
 # plt.title('Placement reason as proportion of total placements', fontsize=18, pad=10)
 
@@ -389,12 +393,12 @@ values = ['Disciplinary',
         'Other']
 
 for v in values:
-    data = srms1[srms1[to_plot] == v]
+    data = srms2[srms2[to_plot] == v]
     x=data.loc[:, 'placement_date'].astype(int)
     y=data.loc[:,'days_solitary']
     plt.scatter(x, y, s=20, alpha=.8)
 
-plt.xticks(pd.date_range(start='2013-01-01', end='2018-01-01', freq='AS-OCT').astype(int))
+plt.xticks(pd.date_range(start='2013-01-01', end='2020-06-01', freq='AS-OCT').astype(int))
 xticks = ax.get_xticks()
 xticks_dates = [str(f'FY{pd.to_datetime(x).year}') for x in xticks]
 ax.set_xticklabels(xticks_dates)
@@ -407,6 +411,10 @@ ax.yaxis.set_major_formatter(mtick.ScalarFormatter())
 plt.legend(values, title=to_plot, loc='upper left', bbox_to_anchor=(1, 1))
 
 plt.title('Stay length of reported NWDC segregation placements', fontsize=16)
+
+txt='Data Source: ICE SRMS log released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1.1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=8)
+
 plt.show()
 plt.close(fig=fig)
 del fig, ax
@@ -419,7 +427,7 @@ del fig, ax
 
 ```python, nwdc_mental_illness_table, echo=False
 
-mental_illness = srms1.groupby(by=["mental_illness"])["days_solitary"].describe().sort_values(by='count', ascending=False)
+mental_illness = srms2.groupby(by=["mental_illness"])["days_solitary"].describe().sort_values(by='count', ascending=False)
 mental_illness['count'] = mental_illness['count'].astype(int)
 mental_illness['min'] = mental_illness['min'].astype(int)
 mental_illness['max'] = mental_illness['max'].astype(int)
@@ -429,9 +437,9 @@ mental_illness = mental_illness.fillna('')
 
 ```
 
-While "Mental Illness" is occasionally employed as a `placement_reason` value, all records also include a `mental_illness` field indicating whether the detained person has been diagnosed with a mental illness or serious mental illness. <%= sum(srms1['mental_illness'] == 'Mental Illness') %>, or <%= round(sum(srms1['mental_illness'] == 'Mental Illness') / len(srms1) * 100, 2) %>% of records indicate a "Mental Illness" diagnosis; <%= sum(srms1['mental_illness'] == 'Serious Mental Illness') %>, or <%= round(sum(srms1['mental_illness'] == 'Serious Mental Illness') / len(srms1) * 100, 2) %>% of records indicate a diagnosis of "Serious Mental Illness". Remaining records indicate no mental illness diagnosis.
+While "Mental Illness" is occasionally employed as a `placement_reason` value, all records also include a `mental_illness` field indicating whether the detained person has been diagnosed with a mental illness or serious mental illness. <%= sum(srms2['mental_illness'] == 'Mental Illness') %>, or <%= round(sum(srms2['mental_illness'] == 'Mental Illness') / len(srms2) * 100, 2) %>% of records indicate a "Mental Illness" diagnosis; <%= sum(srms2['mental_illness'] == 'Serious Mental Illness') %>, or <%= round(sum(srms2['mental_illness'] == 'Serious Mental Illness') / len(srms2) * 100, 2) %>% of records indicate a diagnosis of "Serious Mental Illness". Remaining records indicate no mental illness diagnosis.
 
-As shown in the preceding section, <%= sum(srms1['placement_reason'] == "Mental Illness") %> records indicate a `placement_reason` of "Mental Illness". Of these records, <%= sum(srms1[srms1['placement_reason'] == 'Mental Illness']['mental_illness'] == 'None') %> indicate a `mental_illness` value of "None".
+As shown in the preceding section, <%= sum(srms2['placement_reason'] == "Mental Illness") %> records indicate a `placement_reason` of "Mental Illness". Of these records, <%= sum(srms2[srms2['placement_reason'] == 'Mental Illness']['mental_illness'] == 'None') %> indicate a `mental_illness` value of "None".
 
 As illustrated in the following table and chart, stay lengths for individuals with a "Mental Illness" diagnosis tended to be shorter than those without. However, stay lengths for individuals with a "Serious Mental Illness" diagnosis tended to be longer:
 
@@ -450,13 +458,14 @@ fig, ax = plt.subplots(figsize=(7, 6));
 ax.set_xscale("log");
 ax.xaxis.set_major_formatter(mtick.ScalarFormatter());
 
-fig = sns.boxplot(data=srms1, x="days_solitary", y="mental_illness", order=order, palette="vlag");
+fig = sns.boxplot(data=srms2, x="days_solitary", y="mental_illness", order=order, palette="vlag");
 
-fig = sns.swarmplot(data=srms1, x="days_solitary", y="mental_illness", order=order,
+fig = sns.swarmplot(data=srms2, x="days_solitary", y="mental_illness", order=order,
               size=2, color=".3", linewidth=0);
 
 ax.xaxis.grid(True)
 ax.set(ylabel="")
+plt.xlim(.8, 1000)
 sns.despine(trim=True, left=True)
 
 ```
@@ -469,7 +478,7 @@ sns.despine(trim=True, left=True)
 
 ```python, nwdc_detainee_request_tables, echo=False
 
-request_reason = srms1.groupby(['detainee_request', 'placement_reason_type'])["days_solitary"].describe()
+request_reason = srms2.groupby(['detainee_request', 'placement_reason_type'])["days_solitary"].describe()
 request_reason['count'] = request_reason['count'].astype(int)
 request_reason['min'] = request_reason['min'].astype(int)
 request_reason['max'] = request_reason['max'].astype(int)
@@ -477,13 +486,13 @@ request_reason['mean'] = round(request_reason['mean'], 2)
 request_reason['std'] = round(request_reason['std'], 2)
 request_reason = request_reason.fillna('')
 
-detainee_requested = srms1['detainee_request'] == 'Detainee Request'
+detainee_requested = srms2['detainee_request'] == 'Detainee Request'
 
 ```
 
-Each placement is coded as either "Facility-Initiated" (<%= len(srms1[~detainee_requested]) %> placements) or "Detainee Request" (<%= len(srms1[detainee_requested]) %> placements). As seen in the below table, the majority of reported detainee requested placements were for "Protective Custody", with a small minority classified as "Other."
+Each placement is coded as either "Facility-Initiated" (<%= len(srms2[~detainee_requested]) %> placements) or "Detainee Request" (<%= len(srms2[detainee_requested]) %> placements). As seen in the below table, the majority of reported detainee requested placements were for "Protective Custody", with a small minority classified as "Other."
 
-Average stay lengths for "Detainee Request" placements were considerably longer than for "Facility-Initiated" placements (<%= round(srms1.loc[detainee_requested, 'days_solitary'].mean(), 2) %> versus <%= round(srms1.loc[~detainee_requested, 'days_solitary'].mean(), 2) %>) days; however, we note that stay lengths vary greatly and fluctuate over time, as seen in the following figure.
+Average stay lengths for "Detainee Request" placements were considerably longer than for "Facility-Initiated" placements (<%= round(srms2.loc[detainee_requested, 'days_solitary'].mean(), 2) %> versus <%= round(srms2.loc[~detainee_requested, 'days_solitary'].mean(), 2) %>) days; however, we note that stay lengths vary greatly, as seen in the following figure.
 
 **<%= fig_label() %>: Distribution of variable** `days_solitary` **grouped by**  `detainee_request`
 
@@ -493,13 +502,15 @@ fig, ax = plt.subplots(figsize=(7, 6));
 ax.set_xscale("log");
 ax.xaxis.set_major_formatter(mtick.ScalarFormatter());
 
-fig = sns.boxplot(data=srms1, x="days_solitary", y="detainee_request", palette="vlag");
+fig = sns.boxplot(data=srms2, x="days_solitary", y="detainee_request", palette="vlag");
 
-fig = sns.swarmplot(data=srms1, x="days_solitary", y="detainee_request",
+fig = sns.swarmplot(data=srms2, x="days_solitary", y="detainee_request",
               size=2, color=".3", linewidth=0);
 
 ax.xaxis.grid(True)
 ax.set(ylabel="")
+plt.xlim(.8, 1000)
+
 sns.despine(trim=True, left=True)
 
 ```

@@ -46,10 +46,17 @@ def tab_label():
 # Data Appendices: Use of Solitary Confinement at Northwest ICE Processing Center
 ## UW Center for Human Rights
 
-- [NWDC SRMS Records Installment 1](nwdc-srms-1.html)
+
+- [NWDC SRMS Records Installment 2](nwdc-srms-2.html) - Analysis of ICE SRMS records for NWDC for date range 2013-09-03 to 2020-03-16, released to UWCHR in August of 2020 (second installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Data here cited in UWCHR's report "Solitary confinement at the Northwest Detention Center".
+- [NWDC SRMS Records Installment 1](nwdc-srms-1.html) - Analysis of ICE SRMS records for NWDC for date range 2013-05-13 to 2018-05-14, released to UWCHR in February of 2019 (first installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Superceded by second installment analysis above, with exception of dates not include in second installment and potential missing records in second installment (see `analyze/note/srms-compare.ipynb`). 
+
+
+<!---
 
 ---
 
 ## Notes
 
 <%= print_fn_refs() %>
+
+-->
