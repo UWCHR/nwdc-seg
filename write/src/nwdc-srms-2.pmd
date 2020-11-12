@@ -79,7 +79,7 @@ csv_opts = {'sep': '|',
             'encoding': 'utf-8'}
 
 # Import and test asserts for UWCHR segregation log dataset
-srms2 = pd.read_csv('write/input/srms-2.csv.gz',
+srms2 = pd.read_csv('input/srms-2.csv.gz',
                  parse_dates=['placement_date', 'release_date'],
                  **csv_opts)
 
@@ -88,7 +88,7 @@ assert len(srms2) != len(set(srms2['tracking_number'])) # Tracking number redact
 assert sum(srms2['placement_date'].isnull()) == 0
 
 # Import ICIJ segregation log dataset
-icij = pd.read_csv('write/input/icij.csv.gz',
+icij = pd.read_csv('input/icij.csv.gz',
                    parse_dates=['placement_date', 'release_date'],
                    **csv_opts)
 icij['facility'] = icij['facility'].str.strip()
@@ -97,7 +97,7 @@ icij_nwdc = icij['facility'] == icij_nwdc_str
 icij_adelanto = icij['facility'] == 'CA - Adelanto Correctional Facility'
 
 # Import POGO segregation log dataset
-pogo = pd.read_csv('write/input/pogo.csv.gz',
+pogo = pd.read_csv('input/pogo.csv.gz',
                    parse_dates=['placement_date', 'release_date'],
                    **csv_opts)
 
@@ -108,7 +108,11 @@ pogo_nwdc = pogo['facility'] == pogo_nwdc_str
 pogo['nwdc'] = pogo['facility'] == pogo_nwdc_str
 
 # Import NIJC facilities dataset
-facil = pd.read_csv('write/frozen/facil-list.csv.gz', **csv_opts)
+facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
+
+# Import NIJC dedicated facilities dataset for list of DETLOCs
+dedicated = pd.read_csv('frozen/ICEFacilityListDedicated.csv.gz', **csv_opts, header=4)
+dedicated = set(dedicated['DETLOC'])
 
 ```
 
@@ -439,6 +443,40 @@ mental_illness = mental_illness.fillna('')
 
 While "Mental Illness" is occasionally employed as a `placement_reason` value, all records also include a `mental_illness` field indicating whether the detained person has been diagnosed with a mental illness or serious mental illness. <%= sum(srms2['mental_illness'] == 'Mental Illness') %>, or <%= round(sum(srms2['mental_illness'] == 'Mental Illness') / len(srms2) * 100, 2) %>% of records indicate a "Mental Illness" diagnosis; <%= sum(srms2['mental_illness'] == 'Serious Mental Illness') %>, or <%= round(sum(srms2['mental_illness'] == 'Serious Mental Illness') / len(srms2) * 100, 2) %>% of records indicate a diagnosis of "Serious Mental Illness". Remaining records indicate no mental illness diagnosis.
 
+**<%= fig_label() %>: Count of placements by** `mental_illness` **Category**
+
+```python, mental_illness_flag_count, echo=False, fig=True, width='800px'
+
+srms2['mental_illness'] = srms2['mental_illness'].fillna('None')
+
+data = srms2.set_index('placement_date').groupby([pd.Grouper(freq='Q-OCT')])['mental_illness'].value_counts(dropna=False).unstack()
+data.index = [f'{x.year} Q{x.quarter}' for x in data.index]
+
+data = data[['Mental Illness', 'Serious Mental Illness', 'None']]
+
+fig, ax = plt.subplots(figsize=(10,6))
+
+data.plot(kind='bar', ax=ax, stacked=True, figsize=(10,8), color=cm.tab10(range(0,8,1)))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+ax.yaxis.set_minor_locator(MultipleLocator(1))
+ax.yaxis.set_major_locator(MultipleLocator(2))
+plt.xticks(rotation=45)
+
+plt.title('Reported NWDC Segregation Placements by Mental Illness Category', fontsize=18, pad=10)
+plt.ylabel('Placements', fontsize=12)
+plt.xlabel('Fiscal Year Quarter', fontsize=12)
+plt.legend(bbox_to_anchor=(1.04,1), loc='upper left', title='mental_illness')
+txt='Data Source: ICE SRMS log released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1.1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
+
+```
+
 As shown in the preceding section, <%= sum(srms2['placement_reason'] == "Mental Illness") %> records indicate a `placement_reason` of "Mental Illness". Of these records, <%= sum(srms2[srms2['placement_reason'] == 'Mental Illness']['mental_illness'] == 'None') %> indicate a `mental_illness` value of "None".
 
 As illustrated in the following table and chart, stay lengths for individuals with a "Mental Illness" diagnosis tended to be shorter than those without. However, stay lengths for individuals with a "Serious Mental Illness" diagnosis tended to be longer:
@@ -450,7 +488,7 @@ As illustrated in the following table and chart, stay lengths for individuals wi
 
 **<%= fig_label() %>: Distribution of variable** `days_solitary` **by** `mental_illness`
 
-```python, mental_illness_chart, echo=False, fig=True, width='800px'
+```python, mental_illness_days_chart, echo=False, fig=True, width='800px'
 
 order = ['None', 'Mental Illness', 'Serious Mental Illness']
 
@@ -566,54 +604,57 @@ pogo_facil_table = pogo_facil_table.head(10)
 
 <br>
 
-The following figure shows that among the 15 immigration detention facilties with the most total solitary placements from January 2016 to May 2018, Northwest Detention Center consistently had significantly longer average solitary placement lengths than other facilities.
+The following figure illustrates average solitary placement lengths for the 15 dedicated ICE detention facilities with the longest average solitary placements; see [NWDC-srms-2.ipynb](https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/NWDC-srms-2.ipynb) for variations on this figure.
 
 **<%= fig_label() %>: Top 15 immigration detention facilities by total number of solitary placements, average solitary placement length per quarter**
 
 
-```python, solitary_length_timeline, echo=False, fig=True, width="800px"
+```python, solitary_length_chart, echo=False, fig=True, width="800px"
 
-facil_count = pogo.groupby('facility')['record_id'].count()
-facil_count = facil_count.sort_values(ascending=False)
-top_15_facil = facil_count.sort_values(ascending=False).head(15).index
-edit_labels = pd.Series(facil_count.index + ' - ' + facil_count.values.astype(str)).head(15)
-avg_days = pogo.set_index('placement_date').groupby([pd.Grouper(freq='Q'),'facility'])['days_solitary'].mean()
-avg_days = pogo.set_index('placement_date').groupby([pd.Grouper(freq='Q'),'facility'])['days_solitary'].mean()
-avg_days.name = 'mean_days_solitary'
-avg_days = avg_days.reset_index().set_index('facility')
-avg_days = avg_days.sort_values(by=['placement_date', 'mean_days_solitary'],ascending=[True, False])
-avg_days = avg_days.reset_index().set_index('placement_date')
-data = avg_days.reset_index().set_index('facility')
-data = data.reset_index().set_index('placement_date').dropna()
+data = pogo[pogo['detloc'].isin(dedicated)]
 
-fig, ax = plt.subplots(figsize=(10,6))
+data = data.groupby('facility')['days_solitary'].describe().sort_values(by='mean', ascending=False).head(15)
 
-color=iter(cm.viridis_r(np.linspace(0,1,15)))
-grey=iter(cm.Greys(np.linspace(0,1,100)))
+data = data.sort_values(by='mean')
 
-for f in top_15_facil:
-# for f in data['facility'].unique():
-    if f == pogo_nwdc_str:
-        data_sub = data[data['facility'] == f]
-        data_sub['mean_days_solitary'].name = f
-        c=next(color)
-        ax.plot(data_sub['mean_days_solitary'], color=c, alpha=1, linewidth=3)
-    else:
-        data_sub = data[data['facility'] == f]
-        data_sub['mean_days_solitary'].name = f
-        c=next(color)
-        ax.plot(data_sub['mean_days_solitary'], color=c, alpha=.9)
+target = data.loc['TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)']
 
-ax.yaxis.grid(color='#DDDDDD')
-plt.ylabel('Solitary days', fontsize=14)
-plt.suptitle('Average solitary placement length (quarterly)', fontsize=16)
-plt.title('Top 15 ICE facilities by total solitary placements, Jan. 2016 - May 2018')
-handles, labels = ax.get_legend_handles_labels()
-leg = ax.legend(loc='lower center', bbox_to_anchor=(.5, -1), fontsize=12, title='Detention Facility - Solitary Placements', title_fontsize=14, labels=edit_labels.values)
-#fig.savefig('../output/avg_solitary_length.png', dpi=300, bbox_inches='tight')
-plt.show()
+fig, ax = plt.subplots(figsize=(10,5))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.grid(color='#FFFFFF')
+
+y_pos = np.arange(len(data))
+
+plt.barh(y_pos, data['mean'], align='center', color=cm.viridis((data['count']/data['count'].max())))
+
+plt.yticks(y_pos, data.index)
+
+plt.xlabel('Days', fontsize=12)
+
+title = 'Average Length of Reported Segregation Stays\nJan. 2016 - May 2018'
+
+plt.suptitle(title, fontsize=16, y = 1.1)
+plt.title('Top 15 Dedicated ICE Facilities by\nAverage Stay Length')
+
+sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = 0, vmax=data['count'].max()))
+sm._A = []
+plt.colorbar(sm, shrink=.8, label='Number of Segregation Placements')
+
+txt='Data Source: ICE SRMS via Project on Government Oversight\nAnalysis and Figure: UW Center for Human Rights'
+plt.figtext(0, 0, txt, wrap=True, horizontalalignment='left', fontsize=12)
+
+plt.tight_layout()
+plt.show();
+
+nwdc_avg = data.sort_values(by='mean', ascending=False).reset_index().loc[0, 'mean']
+denv_avg = data.sort_values(by='mean', ascending=False).reset_index().loc[1, 'mean']
 
 ```
+
+During the time period covered by the POGO dataset, average solitary stays at NWDC were <%= round(((nwdc_avg - denv_avg) / nwdc_avg * 100 ), 2) %>% longer than any other ICE dedicated detention facility. 
+
 
 ```python, pogo_comparative_tables, echo=False
 
@@ -669,7 +710,7 @@ nwdc_alos_percent_mean = nwdc_alos_percent.mean()
 
 ```
 
-Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy15_alos']) %> days in FY2015 to <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy18_alos']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of other immigration detention centers nationwide.
+Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy15_alos']) %> days in FY2015 to <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy18_alos']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of all other immigration detention centers nationwide.
 
 ```python, alos_hist, echo=False
 
@@ -716,12 +757,15 @@ plt.show()
 
 According to ICE's FY2020 Budget Congressional Justification, the national average length of stay (ALOS) in immigration detention was 47.4 days in FY2018.<%= fn('See: <https://www.dhs.gov/sites/default/files/publications/19_0318_MGMT_CBJ-Immigration-Customs-Enforcement_0.pdf>, page 4.') %> The same source also notes, "For those arrested during ICE interior enforcement operations, ALOS was 53.9 days."<%= fn('Ibid. p. 148.') %>
 
+The following scatter plots highlight Northwest Detention Center's placement compared to other ICE dedicated detention facilities over time, illustrating that its overall average length of stay is consistently among the longest nationwide compared to facilities of similar size (based on Average Daily Population, [ADP]); average solitary placement lengths are also consistently longer than other facilities with similar overall ALOS. 
+
+**<%= fig_label() %>: ICE Dedicated Facilities by Average Length of Stay, Average Daily Population**
+
 ```python, adp_alos_scatter, echo=False
 
 data = facil.set_index('detloc')[alos_cols + adp_cols]
 
-data = data[data.index.isin(set(pogo['detloc']))]
-
+data = data[data.index.isin(dedicated)]
 fys = ['fy15', 'fy16', 'fy17', 'fy18']
 
 fig = plt.figure(figsize=(10,8))
@@ -735,24 +779,28 @@ for fy in fys:
     plt.scatter(x=alos_col, y=adp_col, data=data)
     plt.scatter(x=alos_col, y=adp_col, c='r', data=data.loc['CSCNWWA'])
     
-    plt.xlabel('ALOS')
+    plt.xlabel('Overall Average Length of Stay (Days)')
     plt.xticks(np.arange(0, 151, step=25), rotation=45)
     plt.xlim(-10, 151)
-    plt.ylabel('ADP')
+    plt.ylabel('Average Daily Pop.')
     plt.yticks(np.arange(0, 2001, step=200))
     plt.ylim(-100, 2000)
     plt.title(f'{fy.upper()}')
 
-plt.suptitle(f'ICE facilities with solitary placements\nby ALOS, ADP; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE dedicated facilities with solitary placements\nby ALOS, ADP; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
 
 ```
 
+**<%= fig_label() %>: ICE Dedicated Facilities by Average Length of Stay, Average Solitary Placement Length**
+
 ```python, alos_solitary_scatter, echo=False
 
-g = pogo.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT'),'detloc'])
+data = pogo[pogo['detloc'].isin(dedicated)]
+
+g = data.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT'),'detloc'])
 
 sol_alos = g['days_solitary'].mean().unstack().T
 sol_alos.columns = ['fy16_solitary_alos', 'fy17_solitary_alos', 'fy18_solitary_alos']
@@ -773,15 +821,15 @@ for fy in fys:
     plt.scatter(x=x, y=y, data=data)
     plt.scatter(x=x, y=y, c='r', data=data.loc['CSCNWWA'])
     
-    plt.xlabel('Total ALOS')
+    plt.xlabel('Overall ALOS (Days)')
     plt.xlim(-5, 130)
     plt.xticks(np.arange(0, 126, step=25), rotation=45)
-    plt.ylabel('Solitary ALOS')
+    plt.ylabel('Average Solitary Placement Length (days)')
     plt.yticks(np.arange(0, 151, step=25))
     plt.ylim(-5, 150)
     plt.title(f'{fy.upper()}')
 
-plt.suptitle(f'ICE facilities with solitary placements\nby total ALOS, avg. solitary placement length; NWDC highlighted', fontsize=14)
+plt.suptitle(f'ICE dedicated facilities with solitary placements\nby total ALOS, avg. solitary placement length; NWDC highlighted', fontsize=14)
 plt.subplots_adjust(wspace=.4, hspace=.4)
 plt.show();
 
