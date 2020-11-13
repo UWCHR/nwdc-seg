@@ -12,7 +12,8 @@ This project uses "Principled Data Processing" techniques and tools developed by
 
 Project tasks, in order of workflow (not all tasks will be present in all projects):
 
-- `import/` - Convenience task for importing datasets. Input files in `import/input/` have been previously modified in a private repository to drop fields containing potentially sensitive unredacted information, and subjected to minimal cleaning and standardization (code available for review by request). Input files are symlinked to `import/output/` and then to `input/` of downstream task for transformation and analysis.k
+- `import/` - Convenience task for importing datasets. Input files in `import/input/` have been previously modified in a private repository to drop fields containing potentially sensitive unredacted information, and subjected to minimal cleaning and standardization (code available for review by request). Input files are symlinked to `import/output/` and then to `input/` of downstream task for transformation and analysis.
+  - `import/frozen/` - Contains original PDF and XLSX versions of interal GEO Group reports which do not contain sensitive fields.
 - `analyze/` - Contains various exploratory Jupyter notebooks. These notebooks and their outputs are exploratory and do not necessarily reflect the findings of UWCHR's report.
   - `analyze/output/` contains various versions of figures and data subsets; currently none of these are used in any downstream tasks.
 - `write/` - Writes out data appendices HTML using [Pweave](http://mpastell.com/pweave/).
