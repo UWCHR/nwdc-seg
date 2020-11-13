@@ -46,17 +46,44 @@ def tab_label():
 # Data Appendices: Use of Solitary Confinement at Northwest ICE Processing Center
 ## UW Center for Human Rights
 
+We reviewed four different sources of records relating to segregation placements at the Northwest ICE Processing Center/Northwest Detention Center (NWIPC/NWDC). These include two internal datasets created by GEO Group or its employees; and two installments of data from ICE’s Segregation Review Management System (SRMS). We detail each of these sources in turn below.
+
+### GEO Group datasets
+
+The NWDC segregation datasets created by GEO Group were obtained from ICE via our ongoing FOIA lawsuit; we believe it is the first time that such internal records have been made publicly available. The first of these, with the original filename `Sep_1_2013_to_March_31_2020_SMU_geotrack_report_Redacted.pdf`, is described by US DOJ attorneys for ICE as follows:
+
+> “The GEOtrack report that was provided to Plaintiffs runs from September 1, 2013 to March 31, 2020.  That report not only reports all placements into segregation, but it also tracks movement.  This means that if an individual is placed into one particular unit then simply moves to a different unit, it is tracked in that report (if an individual is moved from H unit cell 101 to H unit cell 102, it would reflect the move as a new placement on the report).”
+
+We refer to this dataset here by the shorthand "SMU" for "Special Management Unit".
+
+The second internal dataset, with the original filename `15_16_17_18_19_20_RHU_admission_Redacted.xlsx`, is described by US DOJ attorneys for ICE as follows:
+
+> “The [RHU] spreadsheet runs from January 2015 to May 28, 2020 and was created by and for a lieutenant within the facility once he took over the segregation lieutenant duties. The spreadsheet is updated once a detainee departs segregation. The subjects who are included on this list, therefore, are those who were placed into segregation and have already been released from segregation. It does not include those individuals who are currently in segregation.”
+
+We refer to this dataset here by the shorthand "RHU" for "Restricted Housing Unit".<%= fn('US DOJ attorneys for ICE specified that the terms “Special Management Unit” and “Restricted Housing Unit” are interchangeable and identify the same locations.') %>
+
+The following appendices details the SMU and RHU datasets of solitary confinement placements at NWDC created by GEO Group; and compare these internal datasets with ICE SRMS datasets of solitary confinement placements (described below):
+
+- [SMU, RHU Description](smu-rhu.html) - 
+- [SMU, RHU, SRMS Comparison](smu-rhu-srms-compare.html) - 
+
+# ICE SRMS datasets
+
+The Segregation Review Management System (SRMS) datasets are maintained by ICE based on segregation placements reported under ICE's national guidelines, including placements for longer than 14 days (or 14 days during a 21-day period) and involving people with “special vulnerabilities.” (For more detail, see our full report.)
+
+UWCHR received two installments of SRMS data for NWDC: the first, released in 2019, covers the period from 2013-05-13 to 2018-05-14; the second, released in 2020, covers the period from 2013-09-03 to 2020-03-16. These datasets have been modified in a private repository to drop fields containing potentially sensitive unredacted information, and subjected to minimal cleaning and standardization (code available for review by request); original versions of these datasets are therefore not included in this public repository.
+
+The SRMS is the only available source of data for national-level analysis of segregation placements and comparisons between various detention facilities. Two investigative journalism and advocacy organizations, the [International Consortium for Investigative Journalism (ICIJ)](https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/) and [Project On Government Oversight (POGO)](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), have released national SRMS datasets covering different time periods.
+
+The following appendices detail the two installments of NWDC SRMS records released to UWCHR by ICE via FOIA, and include comparison with national SRMS datasets obtained by ICIJ and POGO:
 
 - [NWDC SRMS Records Installment 2](nwdc-srms-2.html) - Analysis of ICE SRMS records for NWDC for date range 2013-09-03 to 2020-03-16, released to UWCHR in August of 2020 (second installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Data here cited in UWCHR's report "Solitary confinement at the Northwest Detention Center".
 - [NWDC SRMS Records Installment 1](nwdc-srms-1.html) - Analysis of ICE SRMS records for NWDC for date range 2013-05-13 to 2018-05-14, released to UWCHR in February of 2019 (first installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Superceded by second installment analysis above, with exception of dates not include in second installment and potential missing records in second installment (see [analyze/note/srms-compare.ipynb](https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/srms-compare.ipynb)). 
 
 
-<!---
 
 ---
 
 ## Notes
 
 <%= print_fn_refs() %>
-
--->

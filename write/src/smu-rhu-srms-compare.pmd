@@ -1,0 +1,58 @@
+```python, header, echo=False
+# Author: University of Washington Center for Human Rights
+# Title: Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest ICE Processing Center
+# Date: 2020-11-12
+# License: GPL 3.0 or greater
+```
+
+```python, footnote_functions, echo=False
+
+# Functions for HTML formatted footnotes
+
+fn_count = 1
+fn_buffer = []
+
+def fn(ref_text=str):
+    global fn_count, fn_buffer
+    ftn_sup = f'<a href="#_ftn{fn_count}" name="_ftnref{fn_count}"><sup>[{fn_count}]</sup></a>'
+    ftn_ref = f'<a href="#_ftnref{fn_count}" name="_ftn{fn_count}"><sup>[{fn_count}]</sup></a> {ref_text}'
+    fn_buffer.append(ftn_ref)
+    fn_count = fn_count + 1
+    print(ftn_sup)
+
+def print_fn_refs():
+    global fn_buffer
+    for fn in fn_buffer:
+        print(fn)
+        print()
+
+# Functions for labeling figures and tables
+
+fig_count = 1
+tab_count = 1
+
+def fig_label():
+    global fig_count
+    print(f'Figure {fig_count}')
+    fig_count = fig_count + 1
+
+def tab_label():
+    global tab_count
+    print(f'Table {tab_count}')
+    tab_count = tab_count + 1
+
+```
+
+# Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest ICE Processing Center
+## UW Center for Human Rights
+
+
+<!---
+
+---
+
+## Notes
+
+<%= print_fn_refs() %>
+
+-->

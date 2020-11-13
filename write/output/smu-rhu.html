@@ -669,40 +669,135 @@ img {max-width : 100%}
 
 
 
-<h1>Data Appendices: Use of Solitary Confinement at Northwest ICE Processing Center</h1>
+<h1>GEO Group Internal Datasets on Use of Solitary Confinement at Northwest ICE Processing Center</h1>
 <h2>UW Center for Human Rights</h2>
-<p>We reviewed four different sources of records relating to segregation placements at the Northwest ICE Processing Center/Northwest Detention Center (NWIPC/NWDC). These include two internal datasets created by GEO Group or its employees; and two installments of data from ICE’s Segregation Review Management System (SRMS). We detail each of these sources in turn below.</p>
-<h3>GEO Group datasets</h3>
-<p>The NWDC segregation datasets created by GEO Group were obtained from ICE via our ongoing FOIA lawsuit; we believe it is the first time that such internal records have been made publicly available. The first of these, with the original filename <code>Sep_1_2013_to_March_31_2020_SMU_geotrack_report_Redacted.pdf</code>, is described by US DOJ attorneys for ICE as follows:</p>
-<blockquote>
-<p>“The GEOtrack report that was provided to Plaintiffs runs from September 1, 2013 to March 31, 2020.  That report not only reports all placements into segregation, but it also tracks movement.  This means that if an individual is placed into one particular unit then simply moves to a different unit, it is tracked in that report (if an individual is moved from H unit cell 101 to H unit cell 102, it would reflect the move as a new placement on the report).”</p>
-</blockquote>
-<p>We refer to this dataset here by the shorthand "SMU" for "Special Management Unit".</p>
-<p>The second internal dataset, with the original filename <code>15_16_17_18_19_20_RHU_admission_Redacted.xlsx</code>, is described by US DOJ attorneys for ICE as follows:</p>
-<blockquote>
-<p>“The [RHU] spreadsheet runs from January 2015 to May 28, 2020 and was created by and for a lieutenant within the facility once he took over the segregation lieutenant duties. The spreadsheet is updated once a detainee departs segregation. The subjects who are included on this list, therefore, are those who were placed into segregation and have already been released from segregation. It does not include those individuals who are currently in segregation.”</p>
-</blockquote>
-<p>We refer to this dataset here by the shorthand "RHU" for "Restricted Housing Unit".<a href="#_ftn1" name="_ftnref1"><sup>[1]</sup></a></p>
-<p>The following appendices details the SMU and RHU datasets of solitary confinement placements at NWDC created by GEO Group; and compare these internal datasets with ICE SRMS datasets of solitary confinement placements (described below):</p>
-<ul>
-<li><a href="smu-rhu.html">SMU, RHU Description</a> - </li>
-<li><a href="smu-rhu-srms-compare.html">SMU, RHU, SRMS Comparison</a> - </li>
-</ul>
-<h1>ICE SRMS datasets</h1>
-<p>The Segregation Review Management System (SRMS) datasets are maintained by ICE based on segregation placements reported under ICE's national guidelines, including placements for longer than 14 days (or 14 days during a 21-day period) and involving people with “special vulnerabilities.” (For more detail, see our full report.)</p>
-<p>UWCHR received two installments of SRMS data for NWDC: the first, released in 2019, covers the period from 2013-05-13 to 2018-05-14; the second, released in 2020, covers the period from 2013-09-03 to 2020-03-16. These datasets have been modified in a private repository to drop fields containing potentially sensitive unredacted information, and subjected to minimal cleaning and standardization (code available for review by request); original versions of these datasets are therefore not included in this public repository.</p>
-<p>The SRMS is the only available source of data for national-level analysis of segregation placements and comparisons between various detention facilities. Two investigative journalism and advocacy organizations, the <a href="https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/">International Consortium for Investigative Journalism (ICIJ)</a> and <a href="https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/">Project On Government Oversight (POGO)</a>, have released national SRMS datasets covering different time periods.</p>
-<p>The following appendices detail the two installments of NWDC SRMS records released to UWCHR by ICE via FOIA, and include comparison with national SRMS datasets obtained by ICIJ and POGO:</p>
-<ul>
-<li><a href="nwdc-srms-2.html">NWDC SRMS Records Installment 2</a> - Analysis of ICE SRMS records for NWDC for date range 2013-09-03 to 2020-03-16, released to UWCHR in August of 2020 (second installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Data here cited in UWCHR's report "Solitary confinement at the Northwest Detention Center".</li>
-<li><a href="nwdc-srms-1.html">NWDC SRMS Records Installment 1</a> - Analysis of ICE SRMS records for NWDC for date range 2013-05-13 to 2018-05-14, released to UWCHR in February of 2019 (first installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Superceded by second installment analysis above, with exception of dates not include in second installment and potential missing records in second installment (see <a href="https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/srms-compare.ipynb">analyze/note/srms-compare.ipynb</a>). </li>
-</ul>
-<hr />
-<h2>Notes</h2>
-<p><a href="#_ftnref1" name="_ftn1"><sup>[1]</sup></a> US DOJ attorneys for ICE specified that the terms “Special Management Unit” and “Restricted Housing Unit” are interchangeable and identify the same locations.</p>
+
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+</pre></div>
+
+<h1>SMU</h1>
+<p>Original filename: <code>Sep_1_2013_to_March_31_2020_SMU_geotrack_report_Redacted.pdf</code></p>
+<p>The original file has been converted from PDF to CSV format using the <a href="https://www.xpdfreader.com/pdftotext-man.html">Xpdf pdftotext</a> command line tool with <code>--table</code> option, and hand cleaned to correct OCR errors. The resulting CSV has been minimally cleaned in a private repository; cleaning code availabe upon request.</p>
+<p>The original file includes three redacted fields: <code>Alien #</code>, <code>Name</code>, and <code>Birthdate</code>. The file appears to be generated by a database report for the date range "9/1/2013 To 3/31/2020", presumably from the "GEOTrack" database referenced in the filename and by the DOJ attorneys for ICE.</p>
+
+<div class="highlight"><pre><span></span><span class="n">csv_opts</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sep&#39;</span><span class="p">:</span> <span class="s1">&#39;|&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;quotechar&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;compression&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;encoding&#39;</span><span class="p">:</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">}</span>
+
+<span class="n">smu</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;input/smu.csv.gz&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">csv_opts</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">smu</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+</pre></div>
+
+<div class="highlight"><pre>
+&lt;class &#39;pandas.core.frame.DataFrame&#39;&gt;
+RangeIndex: 3447 entries, 0 to 3446
+Data columns (total 9 columns):
+ #   Column         Non-Null Count  Dtype
+---  ------         --------------  -----
+ 0   citizenship    3447 non-null   object
+ 1   housing        3447 non-null   object
+ 2   assigned_dt    3447 non-null   object
+ 3   removed_dt     3447 non-null   object
+ 4   days_in_seg    3447 non-null   int64
+ 5   assigned_date  3447 non-null   object
+ 6   assigned_hour  3447 non-null   object
+ 7   removed_date   3447 non-null   object
+ 8   removed_hour   3447 non-null   object
+dtypes: int64(1), object(8)
+memory usage: 242.5+ KB
+None
+</pre></div>
+
+<table border="0" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>citizenship</th>
+      <th>housing</th>
+      <th>assigned_dt</th>
+      <th>removed_dt</th>
+      <th>days_in_seg</th>
+      <th>assigned_date</th>
+      <th>assigned_hour</th>
+      <th>removed_date</th>
+      <th>removed_hour</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GUATEMALA</td>
+      <td>H-NA-108</td>
+      <td>6/27/2013 1:31:00AM</td>
+      <td>4/9/2014 11:49:00PM</td>
+      <td>286</td>
+      <td>6/27/2013</td>
+      <td>1:31:00AM</td>
+      <td>4/9/2014</td>
+      <td>11:49:00PM</td>
+    </tr>
+    <tr>
+      <td>MEXICO</td>
+      <td>H-NA-205</td>
+      <td>8/5/2013 2:30:00PM</td>
+      <td>11/10/2014 6:34:00AM</td>
+      <td>462</td>
+      <td>8/5/2013</td>
+      <td>2:30:00PM</td>
+      <td>11/10/2014</td>
+      <td>6:34:00AM</td>
+    </tr>
+    <tr>
+      <td>MEXICO</td>
+      <td>H-NA-106</td>
+      <td>8/8/2013 10:08:00AM</td>
+      <td>9/6/2013 11:41:00AM</td>
+      <td>29</td>
+      <td>8/8/2013</td>
+      <td>10:08:00AM</td>
+      <td>9/6/2013</td>
+      <td>11:41:00AM</td>
+    </tr>
+    <tr>
+      <td>MARSHALL ISLANDS</td>
+      <td>H-NA-203</td>
+      <td>8/15/2013 11:17:00AM</td>
+      <td>9/13/2013 9:05:00AM</td>
+      <td>29</td>
+      <td>8/15/2013</td>
+      <td>11:17:00AM</td>
+      <td>9/13/2013</td>
+      <td>9:05:00AM</td>
+    </tr>
+    <tr>
+      <td>MEXICO</td>
+      <td>H-NA-209</td>
+      <td>8/15/2013 10:07:00PM</td>
+      <td>9/9/2013 12:00:00AM</td>
+      <td>25</td>
+      <td>8/15/2013</td>
+      <td>10:07:00PM</td>
+      <td>9/9/2013</td>
+      <td>12:00:00AM</td>
+    </tr>
+  </tbody>
+</table>
+
+<!---
+
+---
+
+## Notes
+
+
+
+-->
     <HR/>
     <div class="footer">
-      <p>Published from <a href="src/index.pmd">src/index.pmd</a>
+      <p>Published from <a href="src/smu-rhu.pmd">src/smu-rhu.pmd</a>
     using <a href="http://mpastell.com/pweave">Pweave</a> 0.30.3
     on 12-11-2020.<p></div>
 
