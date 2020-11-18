@@ -1,0 +1,6 @@
+output/icij.csv.gz: {duplicates: 0, read: 8488, written: 8488}
+output/pogo.csv.gz: {duplicates: 1, read: 6559, written: 6558}
+output/rhu.csv.gz: {duplicates: 75, read: 2532, written: 2457}
+output/smu.csv.gz: {duplicates: 14, read: 3447, written: 3433}
+output/srms-1.csv.gz: {duplicates: 0, read: 371, written: 371}
+output/srms-2.csv.gz: {duplicates: 6, read: 467, written: 461}
