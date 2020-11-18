@@ -22,6 +22,8 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 ### To do:
 
 - [ ] Add recids in nwdc-dev/clean/
+- [x] Check for duplicates in RHU
+- [ ] Update SMU/RHU stats after drop duplicates
 - [ ] smu.pmd
 - [ ] rhu.ipynb to .pmd
 - [ ] smu-rhu-srms-compare.ipynb to .pmd
