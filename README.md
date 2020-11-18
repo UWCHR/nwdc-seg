@@ -18,3 +18,7 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
   - `analyze/output/` contains various versions of figures and data subsets; currently none of these are used in any downstream tasks.
 - `write/` - Writes out data appendices HTML using [Pweave](http://mpastell.com/pweave/).
 - `docs/` - Data appendices published to [https://uwchr.github.io/nwdc-seg/](https://uwchr.github.io/nwdc-seg/)
+
+### To do:
+
+- [ ] Test
