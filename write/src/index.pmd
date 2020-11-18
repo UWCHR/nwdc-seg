@@ -62,7 +62,7 @@ The second internal dataset, with the original filename `15_16_17_18_19_20_RHU_a
 
 We refer to this dataset here by the shorthand "RHU" for "Restricted Housing Unit".<%= fn('US DOJ attorneys for ICE specified that the terms “Special Management Unit” and “Restricted Housing Unit” are interchangeable and identify the same locations.') %>
 
-The following appendices details the SMU and RHU datasets of solitary confinement placements at NWDC created by GEO Group; and compare these internal datasets with ICE SRMS datasets of solitary confinement placements (described below):
+The following appendices detail the SMU and RHU datasets of solitary confinement placements at NWDC created by GEO Group; and compare these internal datasets with ICE SRMS datasets of solitary confinement placements (described in more detail in the follwing section):
 
 - [SMU, RHU Description](smu-rhu.html) - 
 - [SMU, RHU, SRMS Comparison](smu-rhu-srms-compare.html) - 
