@@ -21,6 +21,7 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 
 ### To do:
 
+- [ ] Add recids in nwdc-dev/clean/
 - [ ] smu.pmd
 - [ ] rhu.ipynb to .pmd
 - [ ] smu-rhu-srms-compare.ipynb to .pmd
