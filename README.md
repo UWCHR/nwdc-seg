@@ -22,15 +22,16 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 ### To do:
 
 - [x] Add recids in nwdc-dev/clean/
+- [x] Write cleanstats in nwdc-dev/clean
 - [x] Check for duplicates in SMU - 14
 - [x] Check for duplicates in RHU - 75
 - [x] Check for duplicates in SRMS 1 - 0
 - [x] Check for duplicates in SRMS 2 - 6
 - [x] Refresh nwdc-seg/ with cleaned datasets
+- [x] smu.pmd: `citizenship` -> `hashid`
+- [x] rhu.ipynb to .pmd
+- [ ] smu-rhu-srms-compare.ipynb to .pmd? Just do this in smu-rhu.pmd?
 - [ ] Update report stats after drop duplicates
 - [ ] Links to relevant data appendix sections in report text 
-- [ ] rhu.ipynb to .pmd
-- [ ] smu-rhu-srms-compare.ipynb to .pmd
-- - Just do this in smu-rhu.pmd?
 - [ ] Links between appendices 
 - [ ] Clean up notebooks
