@@ -149,7 +149,7 @@ These examples suggest that not only do the SRMS logs significantly under-count 
 
 ## Dataset Structure and Cleaning Process
 
-In a separate process, the document released by ICE (`2019-ICLI-00003_-_SRMS_Report_from_CM_-_NWDC_Redacted.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed; and minimally cleaned. The resulting file, `srms-2.csv.gz`, is described and analyzed in the continuing sections. Code for this process is available for review upon request.
+In a private repository, the document released by ICE (`2019-ICLI-00003_-_SRMS_Report_from_CM_-_NWDC_Redacted.xlsx`) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed. The resulting CSV has been minimally cleaned in a private repository, dropping 6 duplicated records and generating unique identifier field `hashid`; cleaning code availabe upon request. The resulting file, `srms-2.csv.gz`, is described and analyzed in the continuing sections. Code for this process is available for review upon request.
 
 ## Dataset Description and Analysis
 

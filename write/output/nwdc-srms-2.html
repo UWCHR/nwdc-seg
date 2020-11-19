@@ -758,7 +758,7 @@ ICE Detention Facilities As Of November 2017"</a>)</li>
 <p>Nationwide, during the period analyzed by the DHS OIG, the POGO dataset includes 511 SRMS records indicating mental illness; fewer than reported by the DHS OIG.</p>
 <p>These examples suggest that not only do the SRMS logs significantly under-count total segregation placements, SRMS logs released by ICE may not be complete.</p>
 <h2>Dataset Structure and Cleaning Process</h2>
-<p>In a separate process, the document released by ICE (<code>2019-ICLI-00003_-_SRMS_Report_from_CM_-_NWDC_Redacted.xlsx</code>) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed; and minimally cleaned. The resulting file, <code>srms-2.csv.gz</code>, is described and analyzed in the continuing sections. Code for this process is available for review upon request.</p>
+<p>In a private repository, the document released by ICE (<code>2019-ICLI-00003_-_SRMS_Report_from_CM_-_NWDC_Redacted.xlsx</code>) has been edited to remove fields containing unredacted sensitive and personally-identifiable information; converted to CSV format and compressed. The resulting CSV has been minimally cleaned in a private repository, dropping 6 duplicated records and generating unique identifier field <code>hashid</code>; cleaning code availabe upon request. The resulting file, <code>srms-2.csv.gz</code>, is described and analyzed in the continuing sections. Code for this process is available for review upon request.</p>
 <h2>Dataset Description and Analysis</h2>
 <p>The dataset released to UWCHR includes 461 records of solitary confinement placements at the Northwest Detention Center. Each record relates to a specific solitary confinement "placement". Detainee names, A-numbers, are redacted from the dataset, making it impossible to determine whether any records relate to detainees experiencing multiple solitary confinement placements; however, comment fields excluded from the public version of this dataset make clear that some represent repeat placements.</p>
 <p>The earliest placement date (start of solitary stay) was September 3, 2013 and the latest placement date was March 16, 2020. The earliest release date (end of solitary stay) was October 3, 2013 and the latest release date was March 20, 2020.</p>
@@ -1792,7 +1792,7 @@ ICE Detention Facilities As Of November 2017"</a>)</li>
     <div class="footer">
       <p>Published from <a href="src/nwdc-srms-2.pmd">src/nwdc-srms-2.pmd</a>
     using <a href="http://mpastell.com/pweave">Pweave</a> 0.30.3
-    on 17-11-2020.<p></div>
+    on 18-11-2020.<p></div>
 
             </div>
         </div>
