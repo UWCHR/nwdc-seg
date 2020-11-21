@@ -29,9 +29,12 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 - [x] Check for duplicates in SRMS 2 - 6
 - [x] Refresh nwdc-seg/ with cleaned datasets
 - [x] smu.pmd: `citizenship` -> `hashid`
-- [x] rhu.ipynb to .pmd
-- [ ] smu-rhu-srms-compare.ipynb to .pmd? Just do this in smu-rhu.pmd?
+- [x] rhu.ipynb to smu-rhu.pmd
+- [x] National comparisons based on POGO to separate .pmd
+- [x] Fix inputs for nwdc-srms-1.pmd, remove national comparison section
+- [ ] Basic qualitiatve descriptive stats for SMU/RHU?
+- [ ] smu-rhu-srms-compare.ipynb to .pmd
 - [ ] Update report stats after drop duplicates
 - [ ] Links to relevant data appendix sections in report text 
 - [ ] Links between appendices 
-- [ ] Clean up notebooks
+- [ ] Clean up remaining notebooks
