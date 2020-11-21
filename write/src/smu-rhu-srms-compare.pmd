@@ -46,13 +46,153 @@ def tab_label():
 # Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest ICE Processing Center
 ## UW Center for Human Rights
 
+[Back to Data Appendix Index](index.html)
 
-<!---
+*List of datasets here*
+
+```python, imports, echo=True
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import yaml
+import seaborn as sns
+from pandas.tseries import offsets
+import matplotlib.ticker as mtick
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator, NullLocator)
+import matplotlib.dates as mdates
+
+csv_opts = {'sep': '|',
+            'quotechar': '"',
+            'compression': 'gzip',
+            'encoding': 'utf-8'}
+
+smu = pd.read_csv('input/smu.csv.gz',
+            parse_dates=['assigned_date', 'removed_date'],
+            **csv_opts)
+
+assert len(set(smu['hashid'])) == len(smu)
+assert sum(smu['hashid'].isnull()) == 0
+
+csv_opts = {'sep': '|',
+            'quotechar': '"',
+            'compression': 'gzip',
+            'encoding': 'utf-8'}
+
+rhu = pd.read_csv('input/rhu.csv.gz',
+            parse_dates=['date_in', 'date_out'],
+            **csv_opts)
+
+assert len(set(rhu['hashid'])) == len(rhu)
+assert sum(rhu['hashid'].isnull()) == 0
+
+
+srms2 = pd.read_csv('input/srms-2.csv.gz',
+                 parse_dates=['placement_date', 'release_date'],
+                 **csv_opts)
+
+assert len(set(srms2['hashid'])) == len(srms2)
+assert sum(srms2['hashid'].isnull()) == 0
+
+srms1 = pd.read_csv('input/srms-1.csv.gz',
+                 parse_dates=['placement_date', 'release_date'],
+                 **csv_opts)
+
+assert len(set(srms1['hashid'])) == len(srms1)
+assert sum(srms1['hashid'].isnull()) == 0
+
+# Standardizing date field names to those used in SRMS
+
+rhu = rhu.rename({'date_in': 'placement_date',
+                  'date_out': 'release_date'}, axis=1)
+
+smu = smu.rename({'assigned_date': 'placement_date',
+                  'removed_date': 'release_date'}, axis=1)
+
+```
+
+A close review of these various datasets gives us an overview of solitary confinement practices at the NWDC, but also raises further questions about consistency of record-keeping and reporting. While the datasets are not directly comparable, and lack unique or consistent identifiers that would allow de-duplication across datasets; there are some characteristics we would expect if record-keeping and reporting was consistent:
+
+- Between the GEO-created datasets for segregation placements at NWDC, SMU would be expected to show more and shorter placements than RHU, because it tracks specific placement locations within the NWDC.
+
+While this is true for most years, we find that in 2018 the RHU dataset reports more total placements than SMU.
+
+- SRMS should contain approximately the same number of long placements as SMU and RHU datasets, based on requirement to report stays longer than 14 days; plus any shorter placements involving populations with “special vulnerabilities.”
+
+We also find that the SMU and RHU datasets include significantly more stays longer than 14 days than those reported in the SRMS datasets. This might be explained if multiple placements of the same individual tracked as multiple entries in the GEO internal reports are reported to ICE SRMS as a single entry.
+
+Comparing total reported days for long stays, the relationship is less consistent; but either SMU or RHU always reflect more total days associated with long stays than SRMS. While not conclusive, the data is suggestive of underreporting of long solitary placements in ICE SRMS records for NWDC.
+
+```python, days_calc_setup, echo=True
+
+# SRMS datasets for NWDC have no 0 length placements
+# (National SRMS data released by POGO does include 0 length placements)
+assert sum(srms1['placement_date'] == srms1['release_date']) == 0
+assert sum(srms2['placement_date'] == srms2['release_date']) == 0
+
+# GEO datasets have 0 length placements
+assert sum(smu['placement_date'] == smu['release_date']) > 0
+assert sum(rhu['placement_date'] == rhu['release_date']) > 0
+
+smu['dataset'] = 'SMU'
+rhu['dataset'] = 'RHU'
+srms1['dataset'] = 'SRMS 1'
+srms2['dataset'] = 'SRMS 2'
+
+geo_datasets = [smu, rhu]
+ice_datasets = [srms1, srms2]
+datasets = geo_datasets + ice_datasets
+
+# Calculating first-day-exclusive placement lengths for each dataset
+for d in datasets:
+    d['days_solitary'] = (d['release_date'] - d['placement_date']) / np.timedelta64(1, 'D')
+
+```
+
+```python, concat_datasets, echo=True
+
+cols = ['dataset', 'placement_date', 'release_date', 'days_solitary', 'hashid']
+
+df = pd.concat([smu[cols], rhu[cols], srms1[cols], srms2[cols]], axis=0)
+
+df['long_stay'] = df['days_solitary'] > 14
+
+
+```
+
+```python, summary_table, echo=True
+
+table = pd.DataFrame()
+table['total'] = df.groupby(['dataset'])['placement_date'].count()
+table['min_date'] = df.groupby(['dataset'])['placement_date'].min()
+table['max_date'] = df.groupby(['dataset'])['placement_date'].max()
+table['avg_length'] = df.groupby(['dataset'])['days_solitary'].mean()
+table['med_length'] = df.groupby(['dataset'])['days_solitary'].median()
+table['min_length'] = df.groupby(['dataset'])['days_solitary'].min()
+table['max_length'] = df.groupby(['dataset'])['days_solitary'].max()
+table['total_long'] = df.groupby(['dataset'])['long_stay'].sum()
+table.to_csv('output/dataset_description.csv')
+
+```
+
+<% print(table.to_html(border=0, index=True)) %>
+
+```python, total_chart, echo=True, figure=True
+
+g = df.set_index('placement_date').groupby([pd.Grouper(freq='AS'), 'dataset'])
+data = g['hashid'].nunique().unstack()
+data.index = data.index.year
+
+fig, ax = plt.subplots(figsize=(10,6))
+
+fig = data.plot(kind='bar')
+
+```
+
 
 ---
 
 ## Notes
 
 <%= print_fn_refs() %>
-
--->

@@ -68,10 +68,6 @@ def tab_label():
 Data analyzed:
 
 1. ICE SRMS dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment).
-2. ICE SRMS dataset of national solitary confinement placements analyzed by International Consortium of Investigative Journalists (Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, ["Thousands of Immigrants Suffer In US Solitary Confinement"](https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/), ICIJ, May 21 2019)
-3. ICE SRMS dataset of national solitary confinement placements analyzed by Project on Government Oversight (POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14 2019)
-4. Dataset of characteristics of ICE detention facilities obtained via FOIA by National Immigrant Justice Center (NIJC, ["
-ICE Detention Facilities As Of November 2017"](https://immigrantjustice.org/ice-detention-facilities-november-2017))
 
 ```python, data_import, echo=True
 
@@ -88,29 +84,6 @@ srms1 = pd.read_csv('input/srms-1.csv.gz',
 assert len(srms1[srms1['release_date'] < srms1['placement_date']]) == 0
 assert len(srms1) == len(set(srms1['tracking_number']))
 assert sum(srms1['placement_date'].isnull()) == 0
-
-# Import ICIJ segregation log dataset
-icij = pd.read_csv('input/icij.csv.gz',
-                   parse_dates=['placement_date', 'release_date'],
-                   **csv_opts)
-icij['facility'] = icij['facility'].str.strip()
-icij_nwdc_str = 'WA - Northwest Detention Center'
-icij_nwdc = icij['facility'] == icij_nwdc_str
-icij_adelanto = icij['facility'] == 'CA - Adelanto Correctional Facility'
-
-# Import POGO segregation log dataset
-pogo = pd.read_csv('input/pogo.csv.gz',
-                   parse_dates=['placement_date', 'release_date'],
-                   **csv_opts)
-
-pogo['record_id'] = range(len(pogo))
-pogo = pogo.rename({'length_of_solitary_confinement_(pogo_calculation)': 'days_solitary'}, axis=1)
-pogo_nwdc_str = 'TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)'
-pogo_nwdc = pogo['facility'] == pogo_nwdc_str
-pogo['nwdc'] = pogo['facility'] == pogo_nwdc_str
-
-# Import NIJC facilities dataset
-facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
 
 ```
 

@@ -1,0 +1,432 @@
+```python, header, echo=False
+# Author: University of Washington Center for Human Rights
+# Title: National ICE SRMS Data Obtained by POGO, ICJI
+# Date: 2020-11-20
+# License: GPL 3.0 or greater
+```
+
+```python, imports, echo=True
+
+import pandas as pd
+from pandas.tseries import offsets
+import numpy as np
+import datetime as dt
+import yaml
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
+import matplotlib.ticker as mtick
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
+                               AutoMinorLocator, NullLocator)
+import matplotlib.dates as mdates
+import seaborn as sns
+
+```
+
+```python, footnote_functions, echo=False
+
+# Functions for HTML formatted footnotes
+
+fn_count = 1
+fn_buffer = []
+
+def fn(ref_text=str):
+    global fn_count, fn_buffer
+    ftn_sup = f'<a href="#_ftn{fn_count}" name="_ftnref{fn_count}"><sup>[{fn_count}]</sup></a>'
+    ftn_ref = f'<a href="#_ftnref{fn_count}" name="_ftn{fn_count}"><sup>[{fn_count}]</sup></a> {ref_text}'
+    fn_buffer.append(ftn_ref)
+    fn_count = fn_count + 1
+    print(ftn_sup)
+
+def print_fn_refs():
+    global fn_buffer
+    for fn in fn_buffer:
+        print(fn)
+        print()
+
+# Functions for labeling figures and tables
+
+fig_count = 1
+tab_count = 1
+
+def fig_label():
+    global fig_count
+    print(f'Figure {fig_count}')
+    fig_count = fig_count + 1
+
+def tab_label():
+    global tab_count
+    print(f'Table {tab_count}')
+    tab_count = tab_count + 1
+
+```
+
+# National ICE SRMS Data Obtained by POGO, ICJI
+## UW Center for Human Rights
+
+[Back to Data Appendix Index](index.html)
+
+Data analyzed:
+
+1. ICE SRMS dataset of national solitary confinement placements analyzed by International Consortium of Investigative Journalists (Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, ["Thousands of Immigrants Suffer In US Solitary Confinement"](https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/), ICIJ, May 21 2019)
+2. ICE SRMS dataset of national solitary confinement placements analyzed by Project on Government Oversight (POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14 2019)
+3. Dataset of characteristics of ICE detention facilities obtained via FOIA by National Immigrant Justice Center (NIJC, ["
+ICE Detention Facilities As Of November 2017"](https://immigrantjustice.org/ice-detention-facilities-november-2017))
+
+```python, data_import, echo=True
+
+csv_opts = {'sep': '|',
+            'quotechar': '"',
+            'compression': 'gzip',
+            'encoding': 'utf-8'}
+
+# Import and test asserts for UWCHR segregation log dataset
+srms2 = pd.read_csv('input/srms-2.csv.gz',
+                 parse_dates=['placement_date', 'release_date'],
+                 **csv_opts)
+
+assert len(srms2[srms2['release_date'] < srms2['placement_date']]) == 0
+assert len(srms2) != len(set(srms2['tracking_number'])) # Tracking number redacted
+assert sum(srms2['placement_date'].isnull()) == 0
+
+# Import ICIJ segregation log dataset
+icij = pd.read_csv('input/icij.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+icij['facility'] = icij['facility'].str.strip()
+icij_nwdc_str = 'WA - Northwest Detention Center'
+icij_nwdc = icij['facility'] == icij_nwdc_str
+icij_adelanto = icij['facility'] == 'CA - Adelanto Correctional Facility'
+
+# Import POGO segregation log dataset
+pogo = pd.read_csv('input/pogo.csv.gz',
+                   parse_dates=['placement_date', 'release_date'],
+                   **csv_opts)
+
+pogo['record_id'] = range(len(pogo))
+pogo = pogo.rename({'length_of_solitary_confinement_(pogo_calculation)': 'days_solitary'}, axis=1)
+pogo_nwdc_str = 'TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)'
+pogo_nwdc = pogo['facility'] == pogo_nwdc_str
+pogo['nwdc'] = pogo['facility'] == pogo_nwdc_str
+
+# Import NIJC facilities dataset
+facil = pd.read_csv('frozen/facil-list.csv.gz', **csv_opts)
+
+# Import NIJC dedicated facilities dataset for list of DETLOCs
+dedicated = pd.read_csv('frozen/ICEFacilityListDedicated.csv.gz', **csv_opts, header=4)
+dedicated = set(dedicated['DETLOC'])
+
+```
+
+## Data Quality
+
+Previous reports by ICIJ and POGO analyzing ICE solitary confinement data have noted that the data likely under-reports true total solitary confinement placements, either due to inaccurate record-keeping or limited criteria for cases which are recorded by ICE. In correspondence related to UWCHR's FOIA litigation against ICE, counsel for DHS has confirmed that the dataset released to UWCHR is drawn from ICE's "Segregation Review Management System" (SRMS), asserting that "Only certain categories of segregation are required to be reported to ICE." A 2017 DHS Office of the Inspector General report explains, "According to SRMS guidance, ERO field office staff, including FODs, must use SRMS to report segregation placement data that falls under the ICE directive’s reporting requirements." These requirements include segregation placements affecting people with "special vulnerabilities" including mental health diagnoses; and placements exceeding 14 days during any 21-day period.<%= fn('OIG-17-119, [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), September 29, 2017.') %> However, elsewhere ICE has stated "SRMS provides a centralized historical record of all segregation cases".<%= fn('[ICE 2017 Budget Justification](https://www.thisweekinimmigration.com/uploads/6/9/2/2/69228175/fy17budgetcongressionaljustificationdhs2.pdf), p. 54.') %>
+
+### Comparisons of SRMS data with published government reports
+
+A comparison of SRMS data released via FOIA with other government sources noting total segregation placement counts suggests that under-reporting of segregation placements may be extensive. For example, SRMS data released to UWCHR under FOIA reports <%= len(srms2.set_index('placement_date').loc['2013-06-01':'2014-06-30']) %> total segregation placements from June 2013-June 2014. However, a [June 24-26, 2014 Office of Detention Oversight inspection report for NWDC](https://drive.google.com/file/d/1YDX4fOOJ3DCftWiQv7O_5jwA2eZ0ftWR/view?usp=sharing) cdstates, “Documentation reflects there were 776 assignments to segregation in the past year: 515 to administrative segregation and 261 to disciplinary segregation” (page 27). Similarly, data on administrative and disciplinary segregation placements nationwide released under FOIA and published by the International Consortium of Investigative Journalists reports <%= len(icij[icij_adelanto].set_index('placement_date').loc['2013-07-01':'2014-07-10']) %> total segregation placements at Adelanto Detention Facility in Adelanto, CA from July 2013-July 2014. However, a [July 8-10, 2014 Office of Detention Oversight inspection of Adelanto](https://www.ice.gov/doclib/foia/odo-compliance-inspections/2014AdelantoJuly.pdf) reports 286 administrative segregation and 328 disciplinary segregation placements (a total of <%= int(286 + 328) %>) during the year prior to the inspection. Similar reports do not appear to be available for more recent years.
+
+Another source of government data offering a comparison with SRMS records is a 2017 DHS Office of Inspector General report [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf), which noted issues with segregation reporting.<%= fn('OIG-17-119 [ICE Field Offices Need to Improve Compliance with Oversight Requirements for Segregation of Detainees with Mental Health Conditions](https://www.oig.dhs.gov/sites/default/files/assets/2017-11/OIG-17-119-Sep17.pdf) (September 29, 2017)') %> The report's methodology is described as follows:
+
+"We [...] analyzed SRMS data from October 1, 2015, to June 30, 2016, which showed 713 segregation placements for detainees with mental health conditions — 272 disciplinary instances and 441 administrative instances. Some detainees were segregated multiple times. From the 713 segregation placements in this time period that were in SRMS, we selected and reviewed a judgmental sample of 189 instances of segregation involving 127 detainees with mental health conditions."
+
+We can use national SRMS logs covering this time period, released by the Project on Government Oversight, to attempt to replicate this methodology:
+
+```python, oig_test, echo=True
+
+oig_frame_start = '2015-10-01'
+oig_frame_end = '2016-06-30'
+
+oig_frame = pogo.set_index('placement_date')[oig_frame_start:oig_frame_end]
+
+mental_illness_true = ['Yes', 'Mental Illness', 'Serious Mental Illness']
+
+```
+
+Nationwide, during the period analyzed by the DHS OIG, the POGO dataset includes <%= sum(oig_frame['mental_illness'].isin(mental_illness_true)) %> SRMS records indicating mental illness; fewer than reported by the DHS OIG.
+
+These examples suggest that not only do the SRMS logs significantly under-count total segregation placements, SRMS logs released by ICE may not be complete.
+
+<br>
+
+## National solitary confinement data
+
+At least two reports based on national data regarding the use of solitary confinement in immigration detention have been published, by the Internaional Consortium of Investigative Journalists (ICIJ) and the Project on Government Oversight (POGO). The data underlying these reports cover an overlapping time period also covered by the data released to UWCHR by ICE. However, due to the lack of unique identifiers for each solitary confinemnet placement, it is not possible to merge these datasets into a single national timeline.
+
+### ICIJ
+
+See: ["Solitary Voices: Thousands of Immigrants Suffer In US Solitary Confinement"](https://www.icij.org/investigations/solitary-voices/thousands-of-immigrants-suffer-in-us-solitary-confinement/) by Spencer Woodman, Karrie Kehoe, Maryam Saleh, and Hannah Rappleye, International Consortium of Investigative Journalists, May 21, 2019.
+
+The dataset published by ICIJ includes <%= len(icij[icij_nwdc]) %> solitary confinement placements at NWDC from <%= print(icij.placement_date.min().strftime('%B %-d, %Y')) %> to <%= print(icij.placement_date.max().strftime('%B %-d, %Y')) %>, out of a total of <%= len(icij) %> placements nationwide.
+
+NWDC is ranked #<%= int(icij.groupby('facility')['record_id'].count().rank(ascending=False)[icij_nwdc_str]) %> among <%= len(set(icij['facility'])) %> ICE facilities ranked by number of solitary placements. The average length of solitary stay is almost <%= round(icij[icij_nwdc]['days_solitary'].mean(), 2) %> days (rank #2), compared to a national average of <%= round(icij['days_solitary'].mean(), 2) %>; median solitary stay is <%= round(icij[icij_nwdc]['days_solitary'].median(), 2) %> days at NWDC (rank #<%= icij.groupby('facility')['days_solitary'].median().rank(ascending=False, method='min')[icij_nwdc_str] %>), compared to a national median of <%= round(icij['days_solitary'].median(), 2) %>.
+
+We do not use the ICIJ dataset for detailed analysis here due to questions about the date fields in the published version of the dataset (see [icij.ipynb](https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/icij.ipynb)); in addition the POGO dataset covers an overlapping time period including more recent records.
+
+### POGO
+
+See: POGO, ["ISOLATED: ICE Confines Some Detainees with Mental Illness in Solitary for Months"](https://www.pogo.org/investigation/2019/08/isolated-ice-confines-some-detainees-with-mental-illness-in-solitary-for-months/), August 14, 2019.
+
+The dataset published by POGO includes <%= len(pogo[pogo_nwdc]) %> solitary confinement placements at NWDC from <%= print(pogo.placement_date.min().strftime('%B %-d, %Y')) %> to <%= print(pogo.placement_date.max().strftime('%B %-d, %Y')) %>, out of a total of <%= len(pogo) %> placements nationwide.
+
+NWDC is ranked #<%= int(pogo.groupby('facility')['record_id'].count().rank(ascending=False)[pogo_nwdc_str]) %> among <%= len(set(pogo['facility'])) %> ICE facilities ranked by number of solitary placements. The average length of solitary stay is almost <%= round(pogo[pogo_nwdc]['days_solitary'].mean(), 2) %> days (rank #2), compared to a national average of <%= round(pogo['days_solitary'].mean(), 2) %>; median solitary stay is <%= round(pogo[pogo_nwdc]['days_solitary'].median(), 2) %> days at NWDC (rank #<%= int(pogo.groupby('facility')['days_solitary'].median().rank(ascending=False, method='min')[pogo_nwdc_str]) %>), compared to a national median of <%= round(pogo['days_solitary'].median(), 2) %>.
+
+The following table describes the distribution of solitary placement lengths (`solitary_days`) for the top 10 facilities with the longest average solitary placements. Note that some of the top facilities only have very few total placements during the period described by the POGO data.
+
+```python, facility_solitary_days_table, echo=False
+
+g1 = pogo.groupby('facility')
+pogo_facil_desc = g1['days_solitary'].describe()
+pogo_facil_table = pogo_facil_desc.sort_values(by='mean', ascending=False)
+pogo_facil_table['count'] = pogo_facil_table['count'].astype(int)
+pogo_facil_table['min'] = round(pogo_facil_table['min'], 0)
+pogo_facil_table['max'] = round(pogo_facil_table['max'], 0)
+pogo_facil_table['mean'] = round(pogo_facil_table['mean'], 2)
+pogo_facil_table['std'] = round(pogo_facil_table['std'], 2)
+pogo_facil_table = pogo_facil_table.fillna('')
+pogo_facil_table = pogo_facil_table.head(10)
+
+```
+
+**<%= tab_label() %>: Top 10 immigration detention facilities by average solitary placement length, description of variable `days_solitary`**
+
+<% print(pogo_facil_table.to_html(border=0, index=True)) %>
+
+<br>
+
+The following figure illustrates average solitary placement lengths for the 15 dedicated ICE detention facilities with the longest average solitary placements; see [NWDC-srms-2.ipynb](https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/NWDC-srms-2.ipynb) for variations on this figure.
+
+**<%= fig_label() %>: Top 15 immigration detention facilities by total number of solitary placements, average solitary placement length per quarter**
+
+
+```python, solitary_length_chart, echo=False, fig=True, width="800px"
+
+data = pogo[pogo['detloc'].isin(dedicated)]
+
+data = data.groupby('facility')['days_solitary'].describe().sort_values(by='mean', ascending=False).head(15)
+
+data = data.sort_values(by='mean')
+
+target = data.loc['TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)']
+
+fig, ax = plt.subplots(figsize=(10,5))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.grid(color='#FFFFFF')
+
+y_pos = np.arange(len(data))
+
+plt.barh(y_pos, data['mean'], align='center', color=cm.viridis((data['count']/data['count'].max())))
+
+plt.yticks(y_pos, data.index)
+
+plt.xlabel('Days', fontsize=12)
+
+title = 'Average Length of Reported Segregation Stays\nJan. 2016 - May 2018'
+
+plt.suptitle(title, fontsize=16, y = 1.1)
+plt.title('Top 15 Dedicated ICE Facilities by\nAverage Stay Length')
+
+sm = plt.cm.ScalarMappable(cmap=plt.cm.viridis, norm=plt.Normalize(vmin = 0, vmax=data['count'].max()))
+sm._A = []
+plt.colorbar(sm, shrink=.8, label='Number of Segregation Placements')
+
+txt='Data Source: ICE SRMS via Project on Government Oversight\nAnalysis and Figure: UW Center for Human Rights'
+plt.figtext(0, 0, txt, wrap=True, horizontalalignment='left', fontsize=12)
+
+plt.tight_layout()
+plt.show();
+
+nwdc_avg = data.sort_values(by='mean', ascending=False).reset_index().loc[0, 'mean']
+denv_avg = data.sort_values(by='mean', ascending=False).reset_index().loc[1, 'mean']
+
+```
+
+During the time period covered by the POGO dataset, average solitary stays at NWDC were <%= round(((nwdc_avg - denv_avg) / nwdc_avg * 100 ), 2) %>% longer than any other ICE dedicated detention facility. 
+
+
+```python, pogo_comparative_tables, echo=False
+
+g2 = pogo.groupby(by=["nwdc","detainee_request"])
+pogo_det_req = g2["days_solitary"].describe()
+pogo_det_req['count'] = pogo_det_req['count'].astype(int)
+pogo_det_req['min'] = round(pogo_det_req['min'], 0)
+pogo_det_req['max'] = round(pogo_det_req['max'], 0)
+pogo_det_req['mean'] = round(pogo_det_req['mean'], 2)
+pogo_det_req['std'] = round(pogo_det_req['std'], 2)
+
+g3 = pogo.groupby(by=['nwdc', 'placement_reason_type'])
+pogo_reason = g3["days_solitary"].describe()
+pogo_reason['count'] = pogo_reason['count'].astype(int)
+pogo_reason['min'] = round(pogo_reason['min'], 0)
+pogo_reason['max'] = round(pogo_reason['max'], 0)
+pogo_reason['mean'] = round(pogo_reason['mean'], 2)
+pogo_reason['std'] = round(pogo_reason['std'], 2)
+
+```
+
+<br>
+
+#### National comparison of solitary stay length by placement categories
+
+Average solitary stays at NWDC are longer than other facilities for both "detainee request" and "facility-initiated" placements:
+
+**<%= tab_label() %>: Solitary placements groupbed by `detainee_request`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
+
+<% print(pogo_det_req.to_html(border=0, index=True)) %>
+
+Placement reason categories longer on average at NWDC than at other detention facilities nationwide include "Facility Security Threat", "Medical", and "Protective Custody". We note that no solitary placements at NWDC are classified as "Suicide Risk Placement".
+
+**<%= tab_label() %>: Solitary placements grouped by `placement_reason_type`, NWDC ('True') versus all other facilities, description of variable `days_solitary`**
+
+<% print(pogo_reason.to_html(border=0, index=True)) %>
+
+<br>
+
+### Facility average length of stay
+
+```python, alos_setup, echo=False
+
+adp_cols = ['fy15_adp', 'fy16_adp', 'fy17_adp', 'fy18_adp']
+
+alos_cols = ['fy15_alos', 'fy16_alos', 'fy17_alos', 'fy18_alos']
+
+alos = facil.set_index('detloc')[alos_cols]
+
+nwdc_alos_percent = alos.rank(pct=True, ascending=True).loc['CSCNWWA']
+
+nwdc_alos_percent_mean = nwdc_alos_percent.mean()
+
+```
+
+Long solitary stays at NWDC cannot be separated from the broader issue of prolonged, and lengthening, stays in civil immigration detention. According to data released by ICE, the average length of stay at NWDC increased from <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy15_alos']) %> days in FY2015 to <%= int(facil.set_index('detloc').loc['CSCNWWA', 'fy18_alos']) %> days in FY2018. During the period from FY2015-2018 average stay lengths at NWDC were longer than at <%= print(f'{round((nwdc_alos_percent_mean * 100), 0)}') %>% of all other immigration detention centers nationwide.
+
+```python, alos_hist, echo=False
+
+fys = ['fy15', 'fy16', 'fy17', 'fy18']
+
+bin_min = 0
+bin_max = 400
+step = 30
+
+num_bins = np.arange(bin_min, bin_max, step)
+
+target_facil = 'CSCNWWA'
+target_alos = alos.loc[target_facil, alos_cols]
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in fys:
+    ax=plt.subplot(2,2,i+1)
+    
+    data = alos[f'{fy}_alos']
+    
+    n, bins, patches = plt.hist(data, num_bins, facecolor='blue', alpha=0.5)
+    
+    target_bins = np.digitize(list(target_alos.values), list(bins))
+    target_bins = target_bins - 1 # patches below needs 0-indexed input
+    
+    patches[target_bins[i]].set_fc('r')
+ 
+    plt.xlabel('ALOS')
+    plt.xticks(np.arange(bin_min, bin_max, step=step), rotation=45)
+    plt.ylabel('Facil Count')
+    plt.yticks(np.arange(0, 400, step=50))
+    plt.ylim(-5, 375)
+    plt.title(f'{fy}')
+
+    # Tweak spacing to prevent clipping of ylabel
+    plt.subplots_adjust(left=0.15) 
+    i = i + 1
+plt.suptitle(f'Distribution of ALOS at ICE detention facilities, NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.2, hspace=.4)
+plt.show()
+
+```
+
+According to ICE's FY2020 Budget Congressional Justification, the national average length of stay (ALOS) in immigration detention was 47.4 days in FY2018.<%= fn('See: <https://www.dhs.gov/sites/default/files/publications/19_0318_MGMT_CBJ-Immigration-Customs-Enforcement_0.pdf>, page 4.') %> The same source also notes, "For those arrested during ICE interior enforcement operations, ALOS was 53.9 days."<%= fn('Ibid. p. 148.') %>
+
+The following scatter plots highlight Northwest Detention Center's placement compared to other ICE dedicated detention facilities over time, illustrating that its overall average length of stay is consistently among the longest nationwide compared to facilities of similar size (based on Average Daily Population, [ADP]); average solitary placement lengths are also consistently longer than other facilities with similar overall ALOS. 
+
+**<%= fig_label() %>: ICE Dedicated Facilities by Average Length of Stay, Average Daily Population**
+
+```python, adp_alos_scatter, echo=False
+
+data = facil.set_index('detloc')[alos_cols + adp_cols]
+
+data = data[data.index.isin(dedicated)]
+fys = ['fy15', 'fy16', 'fy17', 'fy18']
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in fys:
+    adp_col = f'{fy}_adp'
+    alos_col = f'{fy}_alos'
+    ax=plt.subplot(2,2,i+1)
+    i = i+1
+    
+    plt.scatter(x=alos_col, y=adp_col, data=data)
+    plt.scatter(x=alos_col, y=adp_col, c='r', data=data.loc['CSCNWWA'])
+    
+    plt.xlabel('Overall Average Length of Stay (Days)')
+    plt.xticks(np.arange(0, 151, step=25), rotation=45)
+    plt.xlim(-10, 151)
+    plt.ylabel('Average Daily Pop.')
+    plt.yticks(np.arange(0, 2001, step=200))
+    plt.ylim(-100, 2000)
+    plt.title(f'{fy.upper()}')
+
+plt.suptitle(f'ICE dedicated facilities with solitary placements\nby ALOS, ADP; NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.4, hspace=.4)
+plt.show();
+
+
+```
+
+**<%= fig_label() %>: ICE Dedicated Facilities by Average Length of Stay, Average Solitary Placement Length**
+
+```python, alos_solitary_scatter, echo=False
+
+data = pogo[pogo['detloc'].isin(dedicated)]
+
+g = data.set_index('placement_date').groupby([pd.Grouper(freq='AS-OCT'),'detloc'])
+
+sol_alos = g['days_solitary'].mean().unstack().T
+sol_alos.columns = ['fy16_solitary_alos', 'fy17_solitary_alos', 'fy18_solitary_alos']
+
+data = sol_alos.join(facil.set_index('detloc')[alos_cols])
+data = data.drop('fy15_alos', axis=1)
+
+fys = ['fy16', 'fy17', 'fy18']
+
+fig = plt.figure(figsize=(10,8))
+i = 0
+for fy in fys:
+    x = f'{fy}_alos'
+    y = f'{fy}_solitary_alos'
+    ax=plt.subplot(2,2,i+1)
+    i = i+1
+    
+    plt.scatter(x=x, y=y, data=data)
+    plt.scatter(x=x, y=y, c='r', data=data.loc['CSCNWWA'])
+    
+    plt.xlabel('Overall ALOS (Days)')
+    plt.xlim(-5, 130)
+    plt.xticks(np.arange(0, 126, step=25), rotation=45)
+    plt.ylabel('Average Solitary Placement Length (days)')
+    plt.yticks(np.arange(0, 151, step=25))
+    plt.ylim(-5, 150)
+    plt.title(f'{fy.upper()}')
+
+plt.suptitle(f'ICE dedicated facilities with solitary placements\nby total ALOS, avg. solitary placement length; NWDC highlighted', fontsize=14)
+plt.subplots_adjust(wspace=.4, hspace=.4)
+plt.show();
+
+
+```
+
+---
+
+## Notes
+
+<%= print_fn_refs() %>

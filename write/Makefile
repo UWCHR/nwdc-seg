@@ -10,6 +10,7 @@
 all: \
 	output/smu-rhu.html \
 	output/smu-rhu-srms-compare.html \
+	output/natl-srms.html \
 	output/nwdc-srms-2.html \
 	output/nwdc-srms-1.html \
 	output/index.html
@@ -24,12 +25,20 @@ output/smu-rhu.html: \
 	pweave src/smu-rhu.pmd -f md2html -o output/smu-rhu.html
 
 output/smu-rhu-srms-compare.html: \
-		src/smu-rhu.pmd \
+		src/smu-rhu-srms-compare.pmd \
 		input/smu.csv.gz \
 		input/rhu.csv.gz \
 		input/srms-1.csv.gz \
 		input/srms-2.csv.gz
 	pweave src/smu-rhu-srms-compare.pmd -f md2html -o output/smu-rhu-srms-compare.html
+
+output/natl-srms.html: \
+		src/natl-srms.pmd \
+		frozen/facil-list.csv.gz \
+		input/srms-2.csv.gz \
+		input/pogo.csv.gz \
+		input/icij.csv.gz
+	pweave src/natl-srms.pmd -f md2html -o output/natl-srms.html
 
 output/nwdc-srms-2.html: \
 		src/nwdc-srms-2.pmd \

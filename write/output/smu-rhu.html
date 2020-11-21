@@ -1359,7 +1359,7 @@ date_in
 Freq: AS-JAN, Name: hashid, dtype: int64
 </pre></div>
 
-<p>Stays over 14 days must be reported to ICE SRMS; here we flag long placements and calculate as a percent of total placements per year. The lack of unique identifiers makes it impossible to track cases of individuals in segregation for a total of 14 non-consecutive days during any 21 day period. And inconsistencies and lack of information in <code>placement_reason</code> make it a poor candidate for flagging placements involving indiviudals with special vulnerabilities.</p>
+<p>Stays over 14 days must be reported to ICE SRMS; here we flag long placements and calculate as a percent of total placements per year. The lack of unique identifiers makes it impossible to track cases of individuals in segregation for a total of 14 non-consecutive days during any 21 day period. Inconsistencies and lack of information in <code>placement_reason</code> make it a poor candidate for flagging placements involving indiviudals with special vulnerabilities. We note an increasing proportion and absolute number of long placements during 2017-2019:</p>
 
 <div class="highlight"><pre><span></span><span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;long_stay&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;total_days&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">14</span>
 <span class="n">long_stays_annual</span> <span class="o">=</span> <span class="n">rhu</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;date_in&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">Grouper</span><span class="p">(</span><span class="n">freq</span><span class="o">=</span><span class="s1">&#39;AS&#39;</span><span class="p">)])[</span><span class="s1">&#39;long_stay&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
@@ -1402,7 +1402,7 @@ Freq: AS-JAN, dtype: float64
     <div class="footer">
       <p>Published from <a href="src/smu-rhu.pmd">src/smu-rhu.pmd</a>
     using <a href="http://mpastell.com/pweave">Pweave</a> 0.30.3
-    on 18-11-2020.<p></div>
+    on 20-11-2020.<p></div>
 
             </div>
         </div>
