@@ -671,20 +671,59 @@ img {max-width : 100%}
 
 <h1>Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest ICE Processing Center</h1>
 <h2>UW Center for Human Rights</h2>
-<!---
+<p><a href="index.html">Back to Data Appendix Index</a></p>
 
----
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span>
+<span class="kn">from</span> <span class="nn">pandas.tseries</span> <span class="kn">import</span> <span class="n">offsets</span>
+<span class="kn">import</span> <span class="nn">matplotlib.ticker</span> <span class="kn">as</span> <span class="nn">mtick</span>
+<span class="kn">from</span> <span class="nn">matplotlib.ticker</span> <span class="kn">import</span> <span class="p">(</span><span class="n">MultipleLocator</span><span class="p">,</span> <span class="n">FormatStrFormatter</span><span class="p">,</span>
+                               <span class="n">AutoMinorLocator</span><span class="p">,</span> <span class="n">NullLocator</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">matplotlib.dates</span> <span class="kn">as</span> <span class="nn">mdates</span>
 
-## Notes
+<span class="n">csv_opts</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sep&#39;</span><span class="p">:</span> <span class="s1">&#39;|&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;quotechar&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;compression&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;encoding&#39;</span><span class="p">:</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">}</span>
 
+<span class="n">smu</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;input/smu.csv.gz&#39;</span><span class="p">,</span>
+            <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;assigned_dt&#39;</span><span class="p">,</span> <span class="s1">&#39;removed_dt&#39;</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">csv_opts</span><span class="p">)</span>
 
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">smu</span><span class="p">[</span><span class="s1">&#39;hashid&#39;</span><span class="p">]))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">smu</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">smu</span><span class="p">[</span><span class="s1">&#39;hashid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
 
--->
+<span class="n">csv_opts</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;sep&#39;</span><span class="p">:</span> <span class="s1">&#39;|&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;quotechar&#39;</span><span class="p">:</span> <span class="s1">&#39;&quot;&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;compression&#39;</span><span class="p">:</span> <span class="s1">&#39;gzip&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;encoding&#39;</span><span class="p">:</span> <span class="s1">&#39;utf-8&#39;</span><span class="p">}</span>
+
+<span class="n">rhu</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;input/rhu.csv.gz&#39;</span><span class="p">,</span>
+            <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;date_in&#39;</span><span class="p">,</span> <span class="s1">&#39;date_out&#39;</span><span class="p">],</span>
+            <span class="o">**</span><span class="n">csv_opts</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;hashid&#39;</span><span class="p">]))</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">rhu</span><span class="p">)</span>
+<span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;hashid&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
+
+<span class="n">srms2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;input/srms-2.csv.gz&#39;</span><span class="p">,</span>
+                 <span class="n">parse_dates</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;placement_date&#39;</span><span class="p">,</span> <span class="s1">&#39;release_date&#39;</span><span class="p">],</span>
+                 <span class="o">**</span><span class="n">csv_opts</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">srms2</span><span class="p">[</span><span class="n">srms2</span><span class="p">[</span><span class="s1">&#39;release_date&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">srms2</span><span class="p">[</span><span class="s1">&#39;placement_date&#39;</span><span class="p">]])</span> <span class="o">==</span> <span class="mi">0</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">srms2</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">srms2</span><span class="p">[</span><span class="s1">&#39;tracking_number&#39;</span><span class="p">]))</span> <span class="c1"># Tracking number redacted</span>
+<span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">srms2</span><span class="p">[</span><span class="s1">&#39;placement_date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
+</pre></div>
+
+<hr />
+<h2>Notes</h2>
     <HR/>
     <div class="footer">
       <p>Published from <a href="src/smu-rhu-srms-compare.pmd">src/smu-rhu-srms-compare.pmd</a>
     using <a href="http://mpastell.com/pweave">Pweave</a> 0.30.3
-    on 17-11-2020.<p></div>
+    on 20-11-2020.<p></div>
 
             </div>
         </div>
