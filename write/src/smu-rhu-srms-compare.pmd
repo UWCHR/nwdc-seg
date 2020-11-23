@@ -348,7 +348,7 @@ plt.show();
 
 ```
 
-Looking at all placements including short placements under 14 days, RHU and SMU usually report more total days than reported to SRMS, which would be expected given ICE reporting guidelines. However, during 2018 the SMU dataset records fewer total days than thos reported to SRMS, which is suggestive of data collection inconsistencies:
+Looking at all placements including short placements under 14 days, RHU and SMU usually report more total days than reported to SRMS, which would be expected given ICE reporting guidelines. However, during 2018 the SMU dataset records fewer total days than those reported to SRMS, which is suggestive of data collection inconsistencies:
 
 **<%= fig_label() %>: Total days for all solitary stays per calendar year**
 
