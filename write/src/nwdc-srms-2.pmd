@@ -422,7 +422,7 @@ As shown in the preceding section, <%= sum(srms2['placement_reason'] == "Mental 
 
 As illustrated in the following table and chart, stay lengths for individuals with a "Mental Illness" diagnosis tended to be shorter than those without. However, stay lengths for individuals with a "Serious Mental Illness" diagnosis tended to be longer:
 
-**<%= tab_label() %>: Description of variable** `mental_illness` **grouped by** `placement_reason`
+**<%= tab_label() %>: Description of variable** `days_solitary` **grouped by** `mental_illness`
 
 <% print(mental_illness.to_html(border=0, index=True)) %>
 

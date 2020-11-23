@@ -35,8 +35,8 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 - [ ] Basic qualitiatve descriptive stats for SMU/RHU?
 - [x] smu-rhu-srms-compare.ipynb to .pmd
 - [x] DHS comparisons to natl-srms.pmd
-- [ ] Check dropping null release dates
-- [ ] Update report stats after drop duplicates
+- [x] Check dropping null release dates
+- [x] Update report stats after drop duplicates
 - [ ] Links to relevant data appendix sections in report text 
 - [ ] Links between appendices 
 - [ ] Clean up remaining notebooks

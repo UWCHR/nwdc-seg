@@ -158,6 +158,8 @@ cols = ['dataset', 'placement_date', 'release_date', 'days_solitary', 'hashid']
 
 df = pd.concat([smu[cols], rhu[cols], srms1[cols], srms2[cols]], axis=0)
 
+df = df[pd.notnull(df['release_date'])]
+
 df['long_stay'] = df['days_solitary'] > 14
 
 

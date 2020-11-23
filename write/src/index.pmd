@@ -43,12 +43,13 @@ def tab_label():
 
 ```
 
-# Data Appendices: Use of Solitary Confinement at Northwest ICE Processing Center
+# Data Appendices: Use of Solitary Confinement at Northwest Detention Center
 ## UW Center for Human Rights, 21 November, 2020
 
-Via Freedom of Information Act (FOIA) requests and litigation, the University of Washington Center for Human Rights (UWCHR) obtained four different sources of records relating to segregation (solitary confinement) placements at the Northwest ICE Processing Center/Northwest Detention Center (NWIPC/NWDC), an immigration detention center in Tacoma, Washington operated by the private prison company GEO Group. These include two internal datasets created by GEO Group or its employees; and two installments of data from ICE’s Segregation Review Management System (SRMS). We detail each of these sources in turn below.
+Via Freedom of Information Act (FOIA) requests and litigation, the University of Washington Center for Human Rights (UWCHR) obtained four different sources of records relating to segregation (solitary confinement) placements at the Northwest Detention Center (NWDC), an immigration detention center in Tacoma, Washington operated by the private prison company GEO Group.<%= fn('In this report, for ease of reference, we refer to the facility as the Northwest Detention Center, or NWDC. In September 2019, ICE renamed the facility 
+"Northwest ICE Processing Center." The names "Tacoma ICE Processing Center" also appears in ICE SRMS logs referencing NWDC.') %> These include two internal datasets created by GEO Group or its employees; and two installments of data from ICE’s Segregation Review Management System (SRMS). We detail each of these sources in turn below.
 
-We also reviewed other previously released national datasets of ICE SRMS data obtained by the International Consortium of Investigative Journalists (ICIJ) and Project On Government Oversight (POGO), which permit a basic comparative analysis of reported solitary placements at the NWIPC/NWDC versus other immigration detention facilities nationwide.
+We also reviewed other previously released national datasets of ICE SRMS data obtained by the International Consortium of Investigative Journalists (ICIJ) and Project On Government Oversight (POGO), which permit a basic comparative analysis of reported solitary placements at NWDC versus other immigration detention facilities nationwide.
 
 ### GEO Group datasets
 
@@ -81,7 +82,9 @@ The SRMS is the only available source of data for national-level analysis of seg
 
 The following appendices detail the two installments of NWDC/NWIPC SRMS records released to UWCHR by ICE via FOIA, and include comparison of national SRMS datasets obtained by ICIJ and POGO:
 
-- [NWDC SRMS Records Installment 2](nwdc-srms-2.html) - Analysis of ICE SRMS records for NWDC for date range 2013-09-03 to 2020-03-16, released to UWCHR in August of 2020 (second installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Data here cited in UWCHR's report "Solitary confinement at the Northwest Detention Center". For a parallel analysis of a previous installment of ICE SRMS records for NWDC released to UWCHR in February 2019, see [NWDC SRMS Records Installment 1](nwdc-srms-1.html).
+- [NWDC SRMS Records Installment 2](nwdc-srms-2.html) - Analysis of ICE SRMS records for NWDC for date range 2013-09-03 to 2020-03-16, released to UWCHR in August of 2020 (second installment), with comparison with ICIJ and POGO national ICE SRMS datasets. Data here cited in UWCHR's report "Solitary confinement at the Northwest Detention Center".
+    - For a parallel analysis of a previous installment of ICE SRMS records for NWDC released to UWCHR in February 2019, see [NWDC SRMS Records Installment 1](nwdc-srms-1.html).
+    - For a comparison of the two installments of ICE SRMS data for NWDC, which suggests that some records present in the first installment are unexpectedly missing in the second installment, see [an exploratory notebook here](https://github.com/UWCHR/nwdc-seg/blob/master/analyze/note/srms-compare.ipynb).
 - [National ICE SRMS data](natl-srms.html) - Analysis of ICE SRMS records obtained by POGO show that reported solitary placements at NWDC were among the longest in the nation during the period covered by the POGO dataset.
 
 ---
