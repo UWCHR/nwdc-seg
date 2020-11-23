@@ -35,7 +35,7 @@ output/smu-rhu-srms-compare.html: \
 output/natl-srms.html: \
 		src/natl-srms.pmd \
 		frozen/facil-list.csv.gz \
-		input/srms-2.csv.gz \
+		input/srms-1.csv.gz \
 		input/pogo.csv.gz \
 		input/icij.csv.gz
 	pweave src/natl-srms.pmd -f md2html -o output/natl-srms.html
