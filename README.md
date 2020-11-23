@@ -33,7 +33,9 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 - [x] National comparisons based on POGO to separate .pmd
 - [x] Fix inputs for nwdc-srms-1.pmd, remove national comparison section
 - [ ] Basic qualitiatve descriptive stats for SMU/RHU?
-- [ ] smu-rhu-srms-compare.ipynb to .pmd
+- [x] smu-rhu-srms-compare.ipynb to .pmd
+- [x] DHS comparisons to natl-srms.pmd
+- [ ] Check dropping null release dates
 - [ ] Update report stats after drop duplicates
 - [ ] Links to relevant data appendix sections in report text 
 - [ ] Links between appendices 
