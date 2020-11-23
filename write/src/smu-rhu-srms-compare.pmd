@@ -48,7 +48,13 @@ def tab_label():
 
 [Back to Data Appendix Index](index.html)
 
-*List of datasets here*
+**Data analyzed:**
+
+1. GEO Group Seregation Lieutenant's log of Restricted Housing Unit (**"RHU"**) placements at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+2. GEOTrack report of Segregation Mangement Unit (**"SMU"**) housing assignments at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+3. ICE Segregation Review Management System dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment, **"SRMS 1"**).
+4. ICE Segregation Review Management System dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on August 12, 2020 (second installment, **"SRMS 2"**).
+
 
 ```python, imports, echo=True
 
@@ -114,20 +120,20 @@ smu = smu.rename({'assigned_date': 'placement_date',
 
 A close review of these various datasets gives us an overview of solitary confinement practices at the NWDC, but also raises further questions about consistency of record-keeping and reporting. While the datasets are not directly comparable, and lack unique or consistent identifiers that would allow de-duplication across datasets; there are some characteristics we would expect if record-keeping and reporting was consistent:
 
-- Between the GEO-created datasets for segregation placements at NWDC, SMU would be expected to show more and shorter placements than RHU, because it tracks specific placement locations within the NWDC.
+- Between the GEO-created datasets for segregation placements at NWDC ("RHU" and "SMU"; see the data appendices [index](index.html) and [relevant data appendix](smu-rhu.html) for more information), SMU would be expected to show more and shorter placements than RHU, because it tracks specific placement locations within the NWDC.
 
 While this is true for most years, we find that in 2018 the RHU dataset reports more total placements than SMU.
 
-- SRMS should contain approximately the same number of long placements as SMU and RHU datasets, based on requirement to report stays longer than 14 days; plus any shorter placements involving populations with “special vulnerabilities.”
+- The SRMS datasets should contain approximately the same number of long placements as the RHU dataset, based on requirement to report stays longer than 14 days; plus any shorter placements involving populations with “special vulnerabilities.” 
 
-We also find that the SMU and RHU datasets include significantly more stays longer than 14 days than those reported in the SRMS datasets. This might be explained if multiple placements of the same individual tracked as multiple entries in the GEO internal reports are reported to ICE SRMS as a single entry.
+We find that the SMU and RHU datasets include significantly more stays longer than 14 days than those reported in the SRMS datasets. This might be explained if multiple placements of the same individual tracked as multiple entries in the GEO internal reports are reported to ICE SRMS as a single entry, especially in the case of the SMU dataset, which tracks placements by housing assignment.
 
-Comparing total reported days for long stays, the relationship is less consistent; but either SMU or RHU always reflect more total days associated with long stays than SRMS. While not conclusive, the data is suggestive of underreporting of long solitary placements in ICE SRMS records for NWDC.
+While not conclusive, the data is suggestive of underreporting of long solitary placements in ICE SRMS records for NWDC.
 
 ```python, days_calc_setup, echo=True
 
 # SRMS datasets for NWDC have no 0 length placements
-# (National SRMS data released by POGO does include 0 length placements)
+# (Note national SRMS data released by POGO does include 0 length placements for other detention centers)
 assert sum(srms1['placement_date'] == srms1['release_date']) == 0
 assert sum(srms2['placement_date'] == srms2['release_date']) == 0
 
@@ -135,22 +141,18 @@ assert sum(srms2['placement_date'] == srms2['release_date']) == 0
 assert sum(smu['placement_date'] == smu['release_date']) > 0
 assert sum(rhu['placement_date'] == rhu['release_date']) > 0
 
-smu['dataset'] = 'SMU'
 rhu['dataset'] = 'RHU'
+smu['dataset'] = 'SMU'
 srms1['dataset'] = 'SRMS 1'
 srms2['dataset'] = 'SRMS 2'
 
-geo_datasets = [smu, rhu]
+geo_datasets = [rhu, smu]
 ice_datasets = [srms1, srms2]
 datasets = geo_datasets + ice_datasets
 
 # Calculating first-day-exclusive placement lengths for each dataset
 for d in datasets:
     d['days_solitary'] = (d['release_date'] - d['placement_date']) / np.timedelta64(1, 'D')
-
-```
-
-```python, concat_datasets, echo=True
 
 cols = ['dataset', 'placement_date', 'release_date', 'days_solitary', 'hashid']
 
@@ -167,29 +169,219 @@ table = pd.DataFrame()
 table['total'] = df.groupby(['dataset'])['placement_date'].count()
 table['min_date'] = df.groupby(['dataset'])['placement_date'].min()
 table['max_date'] = df.groupby(['dataset'])['placement_date'].max()
-table['avg_length'] = df.groupby(['dataset'])['days_solitary'].mean()
-table['med_length'] = df.groupby(['dataset'])['days_solitary'].median()
-table['min_length'] = df.groupby(['dataset'])['days_solitary'].min()
-table['max_length'] = df.groupby(['dataset'])['days_solitary'].max()
+table['avg_days'] = df.groupby(['dataset'])['days_solitary'].mean()
+table['med_days'] = df.groupby(['dataset'])['days_solitary'].median()
+table['min_days'] = df.groupby(['dataset'])['days_solitary'].min()
+table['max_days'] = df.groupby(['dataset'])['days_solitary'].max()
 table['total_long'] = df.groupby(['dataset'])['long_stay'].sum()
 table.to_csv('output/dataset_description.csv')
 
+overlap_table = table.loc[['RHU', 'SMU', 'SRMS 2']]
+
 ```
+
+**<%= tab_label() %>: Dataset overview: Total records, date range, descriptive statistics for `days_solitary` and total placements >14 days **
 
 <% print(table.to_html(border=0, index=True)) %>
 
-```python, total_chart, echo=True, figure=True
+Note that the below figure covers the entire time period covered by all of the datasets, for `placement_date` values ranging <%= print(table['min_date'].min().strftime('%B %-d, %Y')) %> to <%= print(table['max_date'].max().strftime('%B %-d, %Y')) %>; none of the datasets report complete information for the entire range.
+
+**<%= fig_label() %>: Total records per calendar year**
+
+```python, total_chart, echo=True, fig=True, width='800px'
 
 g = df.set_index('placement_date').groupby([pd.Grouper(freq='AS'), 'dataset'])
 data = g['hashid'].nunique().unstack()
 data.index = data.index.year
 
-fig, ax = plt.subplots(figsize=(10,6))
+fig, ax = plt.subplots()
 
-fig = data.plot(kind='bar')
+data.plot(kind='bar', ax=ax, figsize=(10,6))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+ax.yaxis.set_minor_locator(MultipleLocator(50))
+ax.yaxis.set_major_locator(MultipleLocator(100))
+plt.xticks(rotation=0)
+
+plt.title('Count of total records', fontsize=18, pad=10)
+plt.ylabel('count', fontsize=12)
+plt.xlabel('placement_date', fontsize=12)
+
+txt='Data Source: NWDC segregation datasets released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
 
 ```
 
+**<%= fig_label() %>: Mean placement length by calendar year**
+
+```python, total_chart, echo=True, fig=True, width='800px'
+
+g = df.set_index('placement_date').groupby([pd.Grouper(freq='AS'), 'dataset'])
+data = g['days_solitary'].mean().unstack()
+data.index = data.index.year
+
+fig, ax = plt.subplots()
+
+data.plot(kind='bar', ax=ax, figsize=(10,6))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+ax.yaxis.set_minor_locator(MultipleLocator(5))
+ax.yaxis.set_major_locator(MultipleLocator(15))
+plt.xticks(rotation=0)
+
+plt.title('Annual mean `days_solitary`', fontsize=18, pad=10)
+plt.ylabel('`days_solitary`', fontsize=12)
+plt.xlabel('placement_date', fontsize=12)
+
+txt='Data Source: NWDC segregation datasets released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
+
+```
+
+The distribution of placements by length (focusing on placements of 30 days or less) shows the differences between the various datasets. The GEO Group datasets (SMU, RHU) include more short placements, while the ICE SRMS datasets include more long placements, with concentrations of placements at 14 days, 21 days, and 30 days, corresponding with ICE reporting requirements. ICE SRMS datasets report no placements less than one day long (0 days). Of the GEO Group datasets, for SMU 0 is the most frequent stay length in this sample; for the RHU dataset, 1 is the most frequent. <%= fn("Note here we calculate `days_solitary` as 0 for placements starting and ending on the same day; as discussed in the [SMU, RHU Description](smu-rhu.html) appendix, the original RHU dataset displays a first-day inclusive stay length calculation (where stays starting and ending on the same day = 1); while the original SMU dataset displays a first-day exclusive stay length calculation, and includes hourly placement and release datetime values.") %>
+
+**<%= fig_label() %>: Distribution of records for `days_solitary` <= 30**
+
+```python, 30_days_hist, echo=True, fig=True, width='800px'
+
+data = df[df['days_solitary'] <= 30]
+
+x1 = list( data.loc[data['dataset'] == 'RHU',"days_solitary"])
+x2 = list( data.loc[data['dataset'] == 'SMU',"days_solitary"])
+x3 = list( data.loc[data['dataset'] == 'SRMS 1',"days_solitary"])
+x4 = list( data.loc[data['dataset'] == 'SRMS 2',"days_solitary"])
+
+names = ['RHU', 'SMU', 'SRMS 1', 'SRMS 2']
+         
+plt.hist([x1, x2, x3, x4], bins = int(30/1), density=True, label=names)
+
+plt.legend()
+plt.xlabel('days_solitary')
+plt.ylabel('normalized_records')
+plt.title('Distribution of `days_solitary` <= 30')
+plt.show();
+
+```
+
+## Comparison of datasets with overlapping time range
+
+Below we restict our analysis to SMU, RHU, and SRMS 2 datasets, for which complete data exists for `placement_date` values ranging from <%= print(overlap_table['min_date'].max().strftime('%B %-d, %Y')) %> to <%= print(overlap_table['max_date'].min().strftime('%B %-d, %Y')) %>.
+
+In the following figure we visualize the number of stays longer than 14 days in each dataset, which are required to be reported via the ICE SRMS. Both of the GEO Group datasets, RHU and SMU, consistently record more long stays than are reported via the ICE SRMS. In the case of the SMU, which records placements by housing assignment, this may be explained by long stays broken up into multiple shorter housing assignments of 14 days or more (note Figure 2 above showing that annual average placement lengths for SMU are always below 14 days). 
+
+**<%= fig_label() %>: Total long stays (>14 days) per calendar year**
+
+```python, long_stay_chart, echo=True, fig=True, width='800px'
+
+data = df[df['dataset'] != 'SRMS 1']
+data = data.set_index('placement_date').loc['2015-01-03': '2020-03-16']
+g = data.groupby([pd.Grouper(freq='AS'), 'dataset'])
+data = g['long_stay'].sum().unstack()
+data.index = data.index.year
+
+fig, ax = plt.subplots()
+
+data.plot(kind='bar', ax=ax, figsize=(10,6))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+#ax.yaxis.set_minor_locator(MultipleLocator(50))
+#ax.yaxis.set_major_locator(MultipleLocator(100))
+plt.xticks(rotation=0)
+
+plt.title('Count of long stays (>14 days)', fontsize=18, pad=10)
+plt.ylabel('count', fontsize=12)
+plt.xlabel('placement_date', fontsize=12)
+
+txt='Data Source: NWDC segregation datasets released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
+
+```
+
+Counting total days of solitary placements associated with long stays (>14 days) per calendar year, the relationship is less consistent. During most years, either SMU or RHU reflect more total days associated with long stays than SRMS; except in the case of 2018, when the SRMS reflects slightly more total days associated with long stays than the RHU dataset, and significantly more than the SMU dataset. Again, note that the SMU dataset's total days associated with long stays might differ from the other data sets due to the fact that it reflects housing placements, rather than total length of stay.
+
+**<%= fig_label() %>: Total days for long stays (>14 days) per calendar year**
+
+```python, long_stay_chart, echo=True, fig=True, width='800px'
+
+data = df[df['dataset'] != 'SRMS 1']
+data = data[data['long_stay'] == True]
+data = data.set_index('placement_date').loc['2015-01-03': '2020-03-16']
+g = data.groupby([pd.Grouper(freq='AS'), 'dataset'])
+data = g['days_solitary'].sum().unstack()
+data.index = data.index.year
+
+fig, ax = plt.subplots()
+
+data.plot(kind='bar', ax=ax, figsize=(10,6))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+#ax.yaxis.set_minor_locator(MultipleLocator(50))
+#ax.yaxis.set_major_locator(MultipleLocator(100))
+plt.xticks(rotation=0)
+
+plt.title('Sum of `days_solitary` for long stays (>14 days)', fontsize=18, pad=10)
+plt.ylabel('`days_solitary`', fontsize=12)
+plt.xlabel('placement_date', fontsize=12)
+
+txt='Data Source: NWDC segregation datasets released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
+
+```
+
+Looking at all placements including short placements under 14 days, RHU and SMU usually report more total days than reported to SRMS, which would be expected given ICE reporting guidelines. However, during 2018 the SMU dataset records fewer total days than thos reported to SRMS, which is suggestive of data collection inconsistencies:
+
+**<%= fig_label() %>: Total days for all solitary stays per calendar year**
+
+```python, long_stay_chart, echo=True, fig=True, width='800px'
+
+data = df[df['dataset'] != 'SRMS 1']
+data = data.set_index('placement_date').loc['2015-01-03': '2020-03-16']
+g = data.groupby([pd.Grouper(freq='AS'), 'dataset'])
+data = g['days_solitary'].sum().unstack()
+data.index = data.index.year
+
+fig, ax = plt.subplots()
+
+data.plot(kind='bar', ax=ax, figsize=(10,6))
+
+ax.set_facecolor('#DDDDDD')
+ax.set_axisbelow(True)
+ax.yaxis.grid(color='#FFFFFF')
+
+#ax.yaxis.set_minor_locator(MultipleLocator(50))
+#ax.yaxis.set_major_locator(MultipleLocator(100))
+plt.xticks(rotation=0)
+
+plt.title('Sum of `days_solitary` for all stays', fontsize=18, pad=10)
+plt.ylabel('`days_solitary`', fontsize=12)
+plt.xlabel('placement_date', fontsize=12)
+
+txt='Data Source: NWDC segregation datasets released via FOIA\nFigure: UW Center for Human Rights'
+plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
+
+plt.show();
+
+```
 
 ---
 

@@ -48,6 +48,12 @@ def tab_label():
 
 [Back to Data Appendix Index](index.html)
 
+
+**Data analyzed:**
+
+1. GEO Group Seregation Lieutenant's log of Restricted Housing Unit (**"RHU"**) placements at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+2. GEOTrack report of Segregation Mangement Unit (**"SMU"**) housing assignments at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+
 ```python, imports, echo=True
 
 import pandas as pd

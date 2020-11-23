@@ -65,9 +65,9 @@ def tab_label():
 
 [Back to Data Appendix Index](index.html)
 
-Data analyzed:
+**Data analyzed:**
 
-1. ICE SRMS dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment).
+1. ICE Segregation Review Management System dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment, **"SRMS 1"**).
 
 ```python, data_import, echo=True
 
