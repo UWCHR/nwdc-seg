@@ -1,7 +1,7 @@
 ```python, header, echo=False
 # Author: University of Washington Center for Human Rights
 # Title: National ICE SRMS Data Obtained by POGO, ICJI
-# Date: 2020-11-20
+# Date: 2020-11-30
 # License: GPL 3.0 or greater
 ```
 
@@ -61,7 +61,7 @@ def tab_label():
 ```
 
 # National ICE SRMS Data Obtained by POGO, ICJI
-## UW Center for Human Rights
+## UW Center for Human Rights, 30 November, 2020
 
 [Back to Data Appendix Index](index.html)
 
