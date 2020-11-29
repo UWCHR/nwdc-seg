@@ -60,7 +60,8 @@ def tab_label():
 
 ```
 
-# ICE SRMS Data on Use of Solitary Confinement at Northwest Detention Center, 2nd Installment Aug. 2020
+# Use of Solitary Confinement at the Northwest Detention Center: Data Appendix
+# 3. ICE SRMS Data for NWDC, 2nd Installment Aug. 2020
 ## UW Center for Human Rights, 30 November, 2020
 
 [Back to Data Appendix Index](index.html)
@@ -500,7 +501,7 @@ sns.despine(trim=True, left=True)
 
 <% print(request_reason.to_html(border=0, index=True)) %>
 
-The [next data appendix section](natl-srms.html) uses national ICE SRMS data obtained by ICIJ and POGO to compare the use of segregation at NWDC to other IE detention facilities.
+Next section: [Data Appendix 4. National ICE SRMS Data]
 
 [Back to Data Appendix Index](index.html)
 

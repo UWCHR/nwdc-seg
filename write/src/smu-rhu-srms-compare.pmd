@@ -1,6 +1,6 @@
 ```python, header, echo=False
 # Author: University of Washington Center for Human Rights
-# Title: Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest Detention Center
+# Title: Comparison of GEO Group and ICE SRMS Datasets of Solitary Confinement Placements at Northwest Detention Center
 # Date: 2020-11-30
 # License: GPL 3.0 or greater
 ```
@@ -43,7 +43,8 @@ def tab_label():
 
 ```
 
-# Comparison of GEO Group and ICE SRMS Datsets of Solitary Confinement Placements at Northwest Detention Center
+# Use of Solitary Confinement at the Northwest Detention Center: Data Appendix
+# 2. Comparison of GEO Group and ICE SRMS Datasets
 ## UW Center for Human Rights, 30 November, 2020
 
 [Back to Data Appendix Index](index.html)
@@ -384,6 +385,10 @@ plt.figtext(1, -.03, txt, wrap=True, horizontalalignment='right', fontsize=12)
 plt.show();
 
 ```
+
+Next section: [Data Appendix 3. ICE SRMS Data for NWDC, 2nd Installment Aug. 2020]
+
+[Back to Data Appendix Index](index.html)
 
 ---
 
