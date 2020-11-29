@@ -1,6 +1,6 @@
 # nwdc-seg
 
-Descriptive analysis of datasets regarding solitary confinement (segregation) at the Northwest Detention Center (a.k.a. Northwest ICE Processing Center) in Tacoma, Washington for the report "Solitary Confinement at the Northwest Detention Center" by the University of Washington Center for Human Rights.
+Descriptive analysis of datasets regarding solitary confinement (segregation) at the Northwest Detention Center (a.k.a. Northwest ICE Processing Center) in Tacoma, Washington for the report ["Human Rights Conditions at the Northwest Detention Center: Solitary Confinement"](https://jsis.washington.edu/humanrights/2020/11/30/nwdc-solitary/), published November 30, 2020 by the University of Washington Center for Human Rights. Data appendices published to [https://uwchr.github.io/nwdc-seg/](https://uwchr.github.io/nwdc-seg/).
 
 ## Repository description
 

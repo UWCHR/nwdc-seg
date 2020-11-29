@@ -46,7 +46,7 @@ def tab_label():
 # Data Appendix: Use of Solitary Confinement at Northwest Detention Center
 ## UW Center for Human Rights, 30 November, 2020
 
-This page contains data appendices for the University of Washington Center for Human Rights (UWCHR) report "Human Rights Conditions at the Northwest Detention Center: Solitary Confinement". These documents were generated using data and code at: [https://github.com/UWCHR/nwdc-seg](https://github.com/UWCHR/nwdc-seg)
+This page contains data appendices for the University of Washington Center for Human Rights (UWCHR) report ["Human Rights Conditions at the Northwest Detention Center: Solitary Confinement"](https://jsis.washington.edu/humanrights/2020/11/30/nwdc-solitary/). These documents were generated using data and code available for review on GitHub at the following URL: [https://github.com/UWCHR/nwdc-seg](https://github.com/UWCHR/nwdc-seg)
 
 Via Freedom of Information Act (FOIA) requests and litigation, the UWCHR obtained four different sources of records relating to segregation (solitary confinement) placements at the Northwest Detention Center (NWDC), an immigration detention center in Tacoma, Washington operated by the private prison company GEO Group.<%= fn('In this report, for ease of reference, we refer to the facility as the Northwest Detention Center, or NWDC. In September 2019, ICE renamed the facility "Northwest ICE Processing Center." The name "Tacoma ICE Processing Center" also appears in national ICE SRMS logs referencing NWDC.') %> These include two internal datasets created by GEO Group or its employees; and two installments of data from ICE’s Segregation Review Management System (SRMS). We detail each of these sources in turn below.
 
