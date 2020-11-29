@@ -121,7 +121,7 @@ smu = smu.rename({'assigned_date': 'placement_date',
 
 A close review of these various datasets gives us an overview of solitary confinement practices at the NWDC, but also raises further questions about consistency of record-keeping and reporting. While the datasets are not directly comparable, and lack unique or consistent identifiers that would allow de-duplication across datasets; there are some characteristics we would expect if record-keeping and reporting was consistent:
 
-- Between the GEO-created datasets for segregation placements at NWDC ("RHU" and "SMU"; see the data appendices [index](index.html) and [relevant data appendix](smu-rhu.html) for more information), SMU would be expected to show more and shorter placements than RHU, because it tracks specific placement locations within the NWDC.
+- Between the GEO-created datasets for segregation placements at NWDC ("RHU" and "SMU"<%= fn('US DOJ attorneys for ICE specified that the terms "Special Management Unit" and "Restricted Housing Unit" are interchangeable and identify the same locations.') %>; see the data appendices [index](index.html) and [relevant data appendix](smu-rhu.html) for more information), SMU would be expected to show more and shorter placements than RHU, because it tracks specific placement locations within the NWDC.
 
 While this is true for most years, we find that in 2018 the RHU dataset reports more total placements than SMU.
 
