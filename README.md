@@ -21,7 +21,7 @@ Project tasks, in order of workflow (not all tasks will be present in all projec
 
 ### To do:
 
-- [ ] Basic qualitiatve descriptive stats for SMU/RHU?
+- [x] Basic qualitiatve descriptive stats for SMU/RHU?
 - [ ] Review all text
-- [ ] Links between appendices 
+- [x] Links between appendices 
 - [ ] Clean up remaining notebooks or move to nwdc-dev

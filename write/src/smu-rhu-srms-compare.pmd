@@ -51,8 +51,8 @@ def tab_label():
 
 **Data analyzed:**
 
-1. GEO Group Seregation Lieutenant's log of Restricted Housing Unit (**"RHU"**) placements at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
-2. GEOTrack report of Segregation Mangement Unit (**"SMU"**) housing assignments at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+1. GEO Group Segregation Lieutenant's log of Restricted Housing Unit (**"RHU"**) placements at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
+2. GEOTrack report of Segregation Management Unit (**"SMU"**) housing assignments at NWDC, released to UWCHR via FOIA litigation on August 12, 2020.
 3. ICE Segregation Review Management System dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on February 22, 2019 (first installment, **"SRMS 1"**).
 4. ICE Segregation Review Management System dataset of reported solitary confinement placements at NWDC released to UWCHR via FOIA on August 12, 2020 (second installment, **"SRMS 2"**).
 
@@ -166,6 +166,8 @@ df['long_stay'] = df['days_solitary'] > 14
 
 ```
 
+Below we report basic descriptive statistics for each dataset.
+
 ```python, summary_table, echo=True
 
 table = pd.DataFrame()
@@ -251,7 +253,7 @@ plt.show();
 
 ```
 
-The distribution of placements by length (focusing on placements of 30 days or less) shows the differences between the various datasets. The GEO Group datasets (SMU, RHU) include more short placements, while the ICE SRMS datasets include more long placements, with concentrations of placements at 14 days, 21 days, and 30 days, corresponding with ICE reporting requirements. ICE SRMS datasets report no placements less than one day long (0 days). Of the GEO Group datasets, for SMU 0 is the most frequent stay length in this sample; for the RHU dataset, 1 is the most frequent. <%= fn("Note here we calculate `days_solitary` as 0 for placements starting and ending on the same day; as discussed in the [SMU, RHU Description](smu-rhu.html) appendix, the original RHU dataset displays a first-day inclusive stay length calculation (where stays starting and ending on the same day = 1); while the original SMU dataset displays a first-day exclusive stay length calculation, and includes hourly placement and release datetime values.") %>
+The distribution of placements by length (focusing on placements of 30 days or less) shows the differences between the various datasets. The GEO Group datasets (SMU, RHU) include more short placements, while the ICE SRMS datasets include more long placements, with concentrations of placements at 14 days, 21 days, and 30 days, corresponding with ICE reporting requirements. ICE SRMS datasets report no placements less than one day long (0 days). Of the GEO Group datasets, for SMU 0 is the most frequent stay length in this sample; for the RHU dataset, 1 is the most frequent. <%= fn("Note here we calculate `days_solitary` as 0 for placements starting and ending on the same day; as discussed in [Data Appendix 1. GEO Group Internal Datasets ("SMU", "RHU")](smu-rhu.html), the original RHU dataset displays a first-day inclusive stay length calculation (where stays starting and ending on the same day == 1); while the original SMU dataset displays a first-day exclusive stay length calculation (where stays starting and ending on the same day == 0), and includes hourly placement and release datetime values. It is possible that this calculation underestimates placement lengths for the RHU dataset, in favor of consistency with the other datasets.") %>
 
 **<%= fig_label() %>: Distribution of records for `days_solitary` <= 30**
 
@@ -386,7 +388,7 @@ plt.show();
 
 ```
 
-Next section: [Data Appendix 3. ICE SRMS Data for NWDC, 2nd Installment Aug. 2020]
+Next section: [Data Appendix 3. ICE SRMS Data for NWDC, 2nd Installment Aug. 2020](nwdc-srms-2.html)
 
 [Back to Data Appendix Index](index.html)
 
