@@ -958,7 +958,9 @@ Name: removed_dt, dtype: object
 <span class="k">assert</span> <span class="nb">sum</span><span class="p">(</span><span class="n">smu</span><span class="p">[</span><span class="s1">&#39;days_in_seg&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">smu</span><span class="p">[</span><span class="s1">&#39;days_calc&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">smu</span><span class="p">)</span>
 </pre></div>
 
-<p>The below desciptive statistics reflect first day exclusive stay lengths, including stays of 0 days. 547, or 15.93% of records reflect stay lengths of less than one day, based on placement dates. Note that placements in the SMU dataset represent specific housing assignments within one of 3433 cells in the segregation management unit, and would therefore be expected to reflect more and shorter placements than other datasets:</p>
+<p>The below desciptive statistics reflect first day exclusive stay lengths, including stays of 0 days. 547, or 15.93% of records reflect stay lengths of less than one day, based on placement dates. Note that placements in the SMU dataset represent specific housing assignments within one of ---------------------------------------------------------------------------TypeError                                 Traceback (most recent call last)<ipython-input-1-bc9153271a1f> in <module>()
+----&gt; 1 print(int(set(smu['housing'])))
+TypeError: int() argument must be a string, a bytes-like object or a number, not 'set' cells in the segregation management unit, and would therefore be expected to reflect more and shorter placements than other datasets:</p>
 
 <div class="highlight"><pre><span></span><span class="k">print</span><span class="p">(</span><span class="n">smu</span><span class="p">[</span><span class="s1">&#39;days_calc&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">describe</span><span class="p">())</span>
 </pre></div>
@@ -1523,7 +1525,7 @@ time served - release to gp     80
 Name: release_reason, dtype: int64
 </pre></div>
 
-<p>The field <code>disc_seg</code> flags disciplinary segregation placements, which require a hearing process; versus administrative segregation placements. The majority of placements are administrative. Average stay lengths for disciplinary and administrative are similar; though median </p>
+<p>The field <code>disc_seg</code> flags disciplinary segregation placements, which require a hearing process; versus administrative segregation placements. The majority of placements are administrative. Average stay lengths for disciplinary and administrative are similar; though median values differ.</p>
 
 <div class="highlight"><pre><span></span><span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;disc_seg&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rhu</span><span class="p">[</span><span class="s1">&#39;disc_seg&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 
@@ -1599,7 +1601,7 @@ Name: total_days, dtype: float64
     <div class="footer">
       <p>Published from <a href="https://github.com/UWCHR/nwdc-seg/blob/master/write/src/smu-rhu.pmd">src/smu-rhu.pmd</a>
     using <a href="http://mpastell.com/pweave">Pweave</a> 0.30.3
-    on 28-11-2020.<p></div>
+    on 31-03-2021.<p></div>
 
             </div>
         </div>

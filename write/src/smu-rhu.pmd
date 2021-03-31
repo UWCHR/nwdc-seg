@@ -153,7 +153,7 @@ assert sum(smu['days_in_seg'] == smu['days_calc']) == len(smu)
 
 ```
 
-The below desciptive statistics reflect first day exclusive stay lengths, including stays of 0 days. <%= sum(smu['days_calc'] < 1) %>, or <%= round((sum(smu['days_calc'] < 1) / len(smu) * 100), 2) %>% of records reflect stay lengths of less than one day, based on placement dates. Note that placements in the SMU dataset represent specific housing assignments within one of <%= print(int(len(smu['housing']))) %> cells in the segregation management unit, and would therefore be expected to reflect more and shorter placements than other datasets:
+The below desciptive statistics reflect first day exclusive stay lengths, including stays of 0 days. <%= sum(smu['days_calc'] < 1) %>, or <%= round((sum(smu['days_calc'] < 1) / len(smu) * 100), 2) %>% of records reflect stay lengths of less than one day, based on placement dates. Note that placements in the SMU dataset represent specific housing assignments within one of <%= print(int(set(smu['housing']))) %> cells in the segregation management unit, and would therefore be expected to reflect more and shorter placements than other datasets:
 
 ```python, smu_days_calc_describe, echo=True
 
@@ -424,7 +424,7 @@ print(rhu['release_reason'].str.strip().str.lower().value_counts().head(10))
 
 ```
 
-The field `disc_seg` flags disciplinary segregation placements, which require a hearing process; versus administrative segregation placements. The majority of placements are administrative. Average stay lengths for disciplinary and administrative are similar; though median 
+The field `disc_seg` flags disciplinary segregation placements, which require a hearing process; versus administrative segregation placements. The majority of placements are administrative. Average stay lengths for disciplinary and administrative are similar; though median values differ.
 
 ```python, rhu_disc_seg, echo=True
 
