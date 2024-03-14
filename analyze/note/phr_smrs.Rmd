@@ -18,7 +18,7 @@ This notebook focuses on analysis of segregation records reported by the Northwe
 ```{r import_data}
 
 library(pacman)
-p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight)
+p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight, viridis)
 
 df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1.2023_Redacted.csv.gz'), delim='|',
                       col_types = cols('Placement Date' = col_date(format="%m/%d/%Y"),
@@ -71,10 +71,35 @@ As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay
 ```{r placemnent_length_natl}
 
 df %>% 
-  dplyr::select(country_of_citizenship, facility, length_of_stay) %>% 
+  dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
   arrange(desc(length_of_stay)) %>% 
   head(10) %>% 
-  knitr::kable(caption = "10 longest solitary placements")
+  knitr::kable(caption = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
+               row.names = TRUE)
+
+df %>% 
+  dplyr::select(country_of_citizenship, facility, length_of_stay) %>% 
+  arrange(desc(length_of_stay)) %>% 
+  mutate(rank = row_number()) %>% 
+  head(10) %>% 
+  ggplot(aes(x=as.factor(rank), y=length_of_stay, fill=facility)) +
+  geom_col() +
+  # scale_x_discrete(limits=rev) +
+  scale_fill_viridis_d(direction=-1) +
+  # gghighlight(facility == nwdc) +
+  labs(title = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
+       fill = "Facility") +
+  ylab("Length of placement (Days)") +
+  xlab("") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.direction = 'vertical')
+
+# Simple bar chart:
+# National average
+# NWDC average
+# Daniel
+# Int'l standard for torture
 
 ```
 
