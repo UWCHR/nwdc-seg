@@ -1,5 +1,5 @@
 ---
-title: "SRMS data via PHR"
+title: "Data on Solitary Confinement at the Northwest Detention Center"
 author: "UWCHR"
 date: "2024-03-14"
 output:
@@ -11,11 +11,15 @@ output:
         code_folding: hide
 ---
 
-Analysis of ICE Segregation Review Management System data released via FOIA request by Harvard Law School; published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR). For caveats regarding this data, see the section heading "Limitations of FOIA Data Analysis" in the above linked report.
+# Data source
 
-This notebook focuses on analysis of segregation records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as Northwest Detention Center and referred to as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data.
+This dataset of ICE Segregation Review Management System records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR). For a full description of the dataset, see the above linked report.
 
-```{r import_data}
+## Notebook goal
+
+This notebook focuses on analysis of segregation records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
+
+```{r import_data, message = FALSE, warning = FALSE}
 
 library(pacman)
 p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight, viridis)
@@ -29,9 +33,11 @@ names(df) %<>% stringr::str_replace_all("\\s","_") %>% tolower
 
 ```
 
-On [date], the death of Charles Leo Daniel was reported at Northwest ICE Processing Center. Daniel, a citizen of Trinidad and Tobago, was reportedly in segregation at the time of his death. Other ICE records reveal that Daniel was booked in to the NWIPC on April 2, 2020, and that he was the only citizen of Trinidad and Tobago detained at the facility from 2020 until [date] 2023. Therefore, we conclude that the two ICE SRMS records in the HLS dataset for a male citizen of Trinidad and Tobago at NWIPC represent Daniel's segregation history while detained at the facility. The full records are presented below:
+## Death of Charles Leo Daniel at NWDC
 
-```{r nwdc_trinidad}
+On March 7, 2024, the death of Charles Leo Daniel was reported at Northwest Detention Center (NWDC). Daniel, a citizen of Trinidad and Tobago, was reportedly in segregation at the time of his death. Other ICE records reveal that Daniel was booked in to the NWDC on April 2, 2020, and that he was the only citizen of Trinidad and Tobago to be detained at the facility from his arrival in 2020 until August 15, 2022. Therefore, we conclude that the two ICE SRMS records in the HLS dataset for a male citizen of Trinidad and Tobago at NWDC represent Daniel's segregation history while detained at the facility. The full records are presented below (note redaction of some values):
+
+```{r nwdc_trinidad, message = FALSE, warning = FALSE}
 
 nwdc <- "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)"
 
@@ -58,26 +64,28 @@ knitr::kable(transpose_df(nwdc_trin) %>%
                rename(column = rowname,
                       placement_1 = "1",
                       placement_2 = "2"),
-             caption = "NWIPC SRMS records for citizens of Trinindad and Tobago")
+             caption = "NWDC SRMS records for citizens of Trinindad and Tobago")
 
 ```
 
-The first solitary placement began on `r nwdc_trin$placement_date[1]`, shortly after Daniel was booked into the NWIPC and lasted until `r nwdc_trin$release_date[1]`, or `r nwdc_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_trin$length_of_stay[2]` days.
+The first solitary placement began on `r nwdc_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_trin$release_date[1]`, or `r nwdc_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_trin$length_of_stay[2]` days.
 
 As noted, both stays were reported by ICE as "Detainee Request", with the second stay categorized as "Protective Custody". Both stays are also flagged as "Serious Mental Illness".
 
-As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWIPC. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
+As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
 
-```{r placemnent_length_natl}
+```{r placemnent_length_natl, message = FALSE, warning = FALSE}
 
-df %>% 
+t1 <- df %>% 
   dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
   arrange(desc(length_of_stay)) %>% 
   head(10) %>% 
   knitr::kable(caption = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
                row.names = TRUE)
 
-df %>% 
+t1
+
+p1 <- df %>% 
   dplyr::select(country_of_citizenship, facility, length_of_stay) %>% 
   arrange(desc(length_of_stay)) %>% 
   mutate(rank = row_number()) %>% 
@@ -85,7 +93,7 @@ df %>%
   ggplot(aes(x=as.factor(rank), y=length_of_stay, fill=facility)) +
   geom_col() +
   # scale_x_discrete(limits=rev) +
-  scale_fill_viridis_d(direction=-1) +
+  scale_fill_viridis_d(direction=-1, breaks=rev) +
   # gghighlight(facility == nwdc) +
   labs(title = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
        fill = "Facility") +
@@ -95,39 +103,88 @@ df %>%
   theme(legend.position = "bottom",
         legend.direction = 'vertical')
 
-# Simple bar chart:
-# National average
-# NWDC average
-# Daniel
-# Int'l standard for torture
+p1
 
 ```
 
+## Comparison of solitary placement lengths
+
 In fact, solitary placements reported to SRMS at the Northwest ICE Process Center were significantly longer on average than nationally, with an average stay length of `r mean(df[df$facility == nwdc,]$length_of_stay)` days compared to a national average of `r mean(df$length_of_stay)` days, and a median stay length of `r median(df[df$facility == nwdc,]$length_of_stay)` days compared to a national median of `r median(df$length_of_stay)` days:
 
-```{r compare_all}
+```{r compare_all, message = FALSE, warning = FALSE}
 
-df_grouped <- df %>% 
-  mutate(group = case_when(facility == nwdc ~ facility,
-                              facility != nwdc ~ "ALL OTHERS"))
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "TACOMA ICE PROCESSING CTR\n(NORTHWEST DET CTR) (WA)")
 
 df_all <- df %>% 
-  mutate(group = "ALL")
+  mutate(group = "NATIONWIDE SOLITARY\nPLACEMENTS")
 
-dat <- rbind(df_grouped, df_all) %>% 
+dat <- rbind(df_nwdc, df_all) %>% 
   mutate(group = as.factor(group))
 
-# dat %>% 
-#   group_by(group) %>% 
-#   ggplot(aes(x = group, y = length_of_stay)) +
-#   geom_boxplot() +
-#   scale_x_discrete(guide = guide_axis(n.dodge = 2))
-
-dat %>% 
+b1 <- dat %>% 
   group_by(group) %>% 
-  ggplot(aes(x = group, y = log(length_of_stay))) +
+  ggplot(aes(x = group, y = log(length_of_stay), fill=group)) +
   geom_boxplot() +
-  scale_x_discrete(guide = guide_axis(n.dodge = 2))
+  scale_fill_viridis_d(direction=-1, breaks=rev) +
+  scale_x_discrete() +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC")
+
+b1
+
+```
+
+```{r compare_natl_nwdc_daniel}
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC AVG. SOLITARY\nPLACEMENT LENGTH") %>% 
+  group_by(group) %>% 
+  summarize(avg_stay = mean(length_of_stay),
+            total_stay = NA)
+
+df_all <- df %>% 
+  mutate(group = "NATIONWIDE AVG. SOLITARY\nPLACEMENT LENGTH") %>% 
+  group_by(group) %>% 
+  summarize(avg_stay = mean(length_of_stay),
+            total_stay = NA)
+
+df_daniel <- df %>% 
+  filter(facility == nwdc,
+         country_of_citizenship == "TRINIDAD AND TOBAGO") %>% 
+  slice_max(length_of_stay) %>% 
+  mutate(group = "CHARLES LEO DANIEL\n(LONGEST PLACEMENT)") %>% 
+  group_by(group) %>% 
+  summarize(total_stay = mean(length_of_stay),
+            avg_stay = NA)
+
+dat <- rbind(df_nwdc, df_all, df_daniel)
+
+p1 <- dat %>% 
+  mutate(xpos="1") %>% 
+  ggplot() +
+  geom_bar(aes(x = xpos, y = total_stay, fill = group), stat='identity', width = 0.9, alpha = 0.3) +
+  geom_col(aes(x = xpos, y = avg_stay, fill = group), position ="dodge", width = 0.7) +
+  geom_hline(aes(yintercept = 15)) +
+  xlab("")
+
+p1
+
+```
+
+```{r temp}
+
+temp <- data_frame(name = LETTERS[1:10], provision = rnorm(mean = 100, sd = 20, n = 10),
+                expenditure = provision - rnorm(mean = 25, sd = 10, n = 10))
+
+temp %>% mutate(savings = provision - expenditure) %>%
+  pivot_longer(cols = c("expenditure", "savings"), names_to = "Exp", values_to = "val") %>%
+  ggplot() + geom_bar(aes(x= name, y = provision/2), stat = "identity", fill = "blue", width = 0.9, alpha = 0.3) +
+  geom_col(aes(x=name,y=val, fill = Exp), position ="dodge", width = 0.7) +
+  scale_y_continuous(name = "Amount in \u20b9")
 
 ```
 
