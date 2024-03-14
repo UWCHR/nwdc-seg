@@ -1,0 +1,30 @@
+---
+title: "SRMS data via PHR"
+author: "UWCHR"
+date: "2024-03-14"
+output:
+    html_document:
+        html_preview: true
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        code_folding: hide
+---
+
+```{r import_data}
+
+library(pacman)
+p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight)
+
+df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1.2023_Redacted.csv.gz'), delim='|',
+                      col_types = cols('Placement Date' = col_date(format="%m/%d/%Y"),
+                                       'Release Date' = col_date(format="%m/%d/%Y")))
+
+names(df) %<>% stringr::str_replace_all("\\s","_") %>% tolower
+
+```
+
+```{r explore}
+
+```
+
