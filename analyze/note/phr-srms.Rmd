@@ -13,11 +13,11 @@ output:
 
 # Data source
 
-This dataset of ICE Segregation Review Management System records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR).
+This dataset of ICE Segregation Review Management System (SRMS) records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR).
 
 ## Notebook goal
 
-This notebook focuses on analysis of segregation records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
+This notebook focuses on analysis of ICE Segregation Review Management System (SRMS) records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
 
 ```{r import_data, message = FALSE, warning = FALSE}
 
@@ -31,26 +31,44 @@ df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1
 
 names(df) %<>% stringr::str_replace_all("\\s","_") %>% tolower
 
+nwdc_det_trinidad <- read_delim(here::here('analyze', 'frozen', 'nwdc_trinidad_and_tobago_fy11-24ytd.csv.gz'), delim = "|",
+                            col_types = cols(stay_book_in_date_time = col_datetime(format=''),
+                                             stay_book_out_date_time = col_datetime(format=''),
+                                             detention_book_in_date_and_time = col_datetime(format=''),
+                                             detention_book_out_date_time = col_datetime(format='')
+                                             ))
+
 nwdc <- "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)"
 
 # Checking for any variation in SEA AOR facility names; NWDC should be only one present
 stopifnot(length(unique(df[df$facility_aor == "SEA (Seattle)", "facility"])) == 1)
 
+# Data cleaning per `dataverse_files/analysis/data_prep.do`
+df <- df %>% 
+  mutate(mental_illness = case_when(mental_illness == "Yes" ~ "Mental Illness",
+                                    TRUE ~ mental_illness),
+         facility = case_when(facility == "WEBB COUNTY DETENTION CENTER (TX)" ~ "WEBB COUNTY DETENTION CENTER (CCA) (TX)",
+                              TRUE ~ facility))
+
+
+
 ```
 
-## Data overview
+# Data overview
 
 The HLS/PHR dataset includes a total of `r nrow(df)` SMRS placement records for `r length(unique(df$facility))` U.S. ICE detention facilities. For a full description of the dataset, see the [full report](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention).
 
-The dataset includes a total of `r nrow(df %>% filter(facility == nwdc))` SRMS placement records for the Northwest Detention Center (NWDC) in Tacoma, WA.
+The dataset includes a total of `r nrow(df %>% filter(facility == nwdc))` SRMS placement records for the Northwest Detention Center (NWDC) in Tacoma, WA; including `r nrow(df %>% filter(facility == nwdc, is.na(release_date)))` solitary placements that were ongoing at the time of release of the dataset. These ongoing solitary placements are included in this analysis.
 
 ## Death of Charles Leo Daniel at NWDC
 
-On March 7, 2024, the death of Charles Leo Daniel was reported at Northwest Detention Center (NWDC). Daniel, a citizen of Trinidad and Tobago, was reportedly in segregation at the time of his death. Other ICE records reveal that Daniel was booked in to the NWDC on April 2, 2020, and that he was the only citizen of Trinidad and Tobago to be detained at the facility from his arrival in 2020 until August 15, 2022. Therefore, we conclude that the two ICE SRMS records in the HLS dataset for a male citizen of Trinidad and Tobago at NWDC represent Daniel's segregation history while detained at the facility. The full records are presented below (note redaction of some values):
+On March 7, 2024, the death of Charles Leo Daniel was reported at Northwest Detention Center (NWDC). Daniel, a citizen of Trinidad and Tobago, was reportedly in segregation at the time of his death. ICE detention records processed in a separate repository show that Daniel was booked in to the NWDC on April 2, 2020, and that he was the only citizen of Trinidad and Tobago to be detained at the facility from his arrival in 2020 until August 15, 2022 (see `analyze/frozen/nwdc_trinidad_and_tobago_fy11-24ytd.csv.gz`). 
 
-```{r nwdc_trinidad, message = FALSE, warning = FALSE}
+Therefore, we conclude that the two ICE SRMS records in the dataset for a male citizen of Trinidad and Tobago at NWDC represent Daniel's segregation history while detained at the facility. The full records are presented below (note redaction of some values):
 
-nwdc_trin <- df %>% 
+```{r nwdc_seg_trinidad, message = FALSE, warning = FALSE}
+
+nwdc_seg_trin <- df %>% 
   filter(str_detect(facility, "TACOMA"),
          country_of_citizenship == 'TRINIDAD AND TOBAGO') %>% 
   mutate(placement_date = as.character(placement_date),
@@ -66,7 +84,7 @@ transpose_df <- function(df) {
   return(t_df)
 }
 
-knitr::kable(transpose_df(nwdc_trin) %>% 
+knitr::kable(transpose_df(nwdc_seg_trin) %>% 
                rename(column = rowname,
                       placement_1 = "1",
                       placement_2 = "2"),
@@ -74,19 +92,21 @@ knitr::kable(transpose_df(nwdc_trin) %>%
 
 ```
 
-The first solitary placement began on `r nwdc_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_trin$release_date[1]`, or `r nwdc_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_trin$length_of_stay[2]` days. (As noted in the replication data for the HLS/PHR report, ongoing solitary placements were dropped from analysis for the published report; we include these records here due to their relevance to issues at the NWDC.)
+The first solitary placement began on `r nwdc_seg_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_seg_trin$release_date[1]`, or `r nwdc_seg_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_seg_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_seg_trin$length_of_stay[2]` days. (As noted in the replication data for the HLS/PHR report, ongoing solitary placements were dropped from analysis for the published report; we include these records here due to their relevance to issues at the NWDC.)
 
 As noted, both stays were reported by ICE as "Detainee Request", with the second stay categorized as "Protective Custody". Both stays are also flagged as "Serious Mental Illness".
 
-As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC and was also ongoing at the time of release of the dataset. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
+As seen below, Daniel's second placement of at least `r nwdc_seg_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC and was also ongoing at the time of release of the dataset. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
 
 ```{r placemnent_length_natl, message = FALSE, warning = FALSE}
 
 t1 <- df %>% 
   mutate(ongoing_stay = is.na(release_date)) %>% 
-  dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
   arrange(desc(length_of_stay)) %>% 
   head(10) %>% 
+  mutate(length_of_stay = case_when(ongoing_stay == TRUE ~ paste0(as.character(length_of_stay), "+"),
+                                    TRUE ~ as.character(length_of_stay))) %>% 
+  dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
   knitr::kable(caption = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
                row.names = TRUE)
 
@@ -116,7 +136,7 @@ p1
 
 ## Comparison of solitary placement lengths
 
-In fact, solitary placements reported to SRMS at the Northwest ICE Process Center were significantly longer on average than nationally, with an average stay length of `r mean(df[df$facility == nwdc,]$length_of_stay)` days compared to a national average of `r mean(df$length_of_stay)` days, and a median stay length of `r median(df[df$facility == nwdc,]$length_of_stay)` days compared to a national median of `r median(df$length_of_stay)` days:
+In fact, solitary placements reported to SRMS at the Northwest ICE Process Center were significantly longer on average than nationally, with an average stay length of `r round(mean(df[df$facility == nwdc,]$length_of_stay), 2)` days compared to a national average of `r round(mean(df$length_of_stay), 2)` days, and a median stay length of `r round(median(df[df$facility == nwdc,]$length_of_stay), 2)` days compared to a national median of `r round(median(df$length_of_stay), 2)` days:
 
 ```{r compare_all, message = FALSE, warning = FALSE}
 
@@ -146,14 +166,11 @@ b1
 
 ## Special vulnerabilities
 
-SRMS placements are flagged for "special vulnerability" categories, noted in the dataset as "Mental Illness", "Serious Medical Illness", "Serious Disability", and "Suicide Risk?".
+SRMS placements are flagged for "special vulnerability" categories, noted in the dataset as "Mental Illness", "Serious Medical Illness", "Serious Disability", and "Suicide Risk?". The following charts and plots summarize the proportion of SRMS records flagged for these categories at NWDC versus nationally; as well as distributions of placement length for each category at NWDC versus nationally. We note that in almost all categories, solitary placements at NWDC tend to be longer than for the same categories nationwide.
+
+### Mental illness
 
 ```{r mental_illness_prop}
-
-# Standardize one bad value
-df <- df %>% 
-  mutate(mental_illness = case_when(mental_illness == "Yes" ~ "Mental Illness",
-                                    TRUE ~ mental_illness))
 
 mi_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -213,6 +230,7 @@ b1
 
 ```
 
+### Serious medical illness
 
 ```{r medical_illness_length}
 
@@ -226,8 +244,8 @@ df_all <- df %>%
 dat <- rbind(df_nwdc, df_all) %>% 
   mutate(group = as.factor(group))
 
-dat %>% 
-  count(group, serious_medical_illness)
+# dat %>% 
+#   count(group, serious_medical_illness)
 
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_medical_illness) )+
@@ -239,6 +257,7 @@ b1
 
 ```
 
+### Serious disability
 
 ```{r serious_disability_length}
 
@@ -252,8 +271,8 @@ df_all <- df %>%
 dat <- rbind(df_nwdc, df_all) %>% 
   mutate(group = as.factor(group))
 
-dat %>% 
-  count(group, serious_disability)
+# dat %>% 
+#   count(group, serious_disability)
 
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_disability) )+
@@ -265,6 +284,7 @@ b1
 
 ```
 
+## Detainee-requested versus Facility-initiated solitary placements
 
 ```{r detainee_request_prop}
 
@@ -303,8 +323,6 @@ p1 <- dat %>%
 p1
 
 ```
-
-## Detainee request
 
 ```{r detainee_request_length}
 
