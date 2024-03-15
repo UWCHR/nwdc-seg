@@ -22,7 +22,7 @@ This notebook focuses on analysis of ICE Segregation Review Management System (S
 ```{r import_data, message = FALSE, warning = FALSE}
 
 library(pacman)
-p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight, viridis)
+p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight, viridis, gridExtra)
 
 df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1.2023_Redacted.csv.gz'), delim='|',
                       col_types = cols('Placement Date' = col_date(format="%m/%d/%Y"),
@@ -112,33 +112,13 @@ t1 <- df %>%
 
 t1
 
-p1 <- df %>% 
-  dplyr::select(country_of_citizenship, facility, length_of_stay) %>% 
-  arrange(desc(length_of_stay)) %>% 
-  mutate(rank = row_number()) %>% 
-  head(10) %>% 
-  ggplot(aes(x=as.factor(rank), y=length_of_stay, fill=facility)) +
-  geom_col() +
-  # scale_x_discrete(limits=rev) +
-  scale_fill_viridis_d(direction=-1, breaks=rev) +
-  # gghighlight(facility == nwdc) +
-  labs(title = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
-       fill = "Facility") +
-  ylab("Length of placement (Days)") +
-  xlab("") +
-  theme_minimal() +
-  theme(legend.position = "bottom",
-        legend.direction = 'vertical')
-
-p1
-
 ```
 
 ## Comparison of solitary placement lengths
 
 In fact, solitary placements reported to SRMS at the Northwest ICE Process Center were significantly longer on average than nationally, with an average stay length of `r round(mean(df[df$facility == nwdc,]$length_of_stay), 2)` days compared to a national average of `r round(mean(df$length_of_stay), 2)` days, and a median stay length of `r round(median(df[df$facility == nwdc,]$length_of_stay), 2)` days compared to a national median of `r round(median(df$length_of_stay), 2)` days:
 
-```{r compare_all, message = FALSE, warning = FALSE}
+```{r compare_nwdc_vs_all, message = FALSE, warning = FALSE}
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -161,6 +141,21 @@ b1 <- dat %>%
        subtitle = "National versus NWDC")
 
 b1
+
+```
+
+A one-sample t-test shows that this difference in mean stay lengths is statistically significant:
+
+```{r one_sample_t_test}
+
+# Data are approximately normally distributed; we expect banding around stay lengths associated with ICE reporting requirements i.e. 3, 14, 30 days
+# p1 <- qqnorm(log(df$length_of_stay))
+# p2 <- qqnorm(log(df[df$facility == nwdc,]$length_of_stay))
+
+dat <- log(df[df$facility == nwdc,]$length_of_stay)
+mu <- mean(log(df$length_of_stay))
+
+t.test(x=dat, mu=mu, alternative = "greater")
 
 ```
 
@@ -489,6 +484,10 @@ p1
 
 ```
 
+## Interactive charts
+
+The following interactive charts offer an overview of detailed "Placement Reason" values over time at NWDC and nationally:
+
 ### NWDC solitary placements by "Placement Reason"
 
 ```{r nwdc_placement_reason_interactive, message=FALSE, warning=FALSE}
@@ -496,7 +495,8 @@ p1
 p1 <- df %>% 
   filter(facility == nwdc,
          placement_date >= "2018-09-01") %>% 
-  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter"))) %>% 
+  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter")),
+         placement_reason = str_wrap(placement_reason, width=25)) %>% 
   count(qtr, placement_reason) %>% 
   ggplot(aes(x = qtr, y = n, fill = placement_reason)) +
   geom_col(position='stack') +
@@ -519,7 +519,8 @@ ggplotly(p1)
 
 p1 <- df %>% 
   filter(placement_date >= "2018-09-01") %>% 
-  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter"))) %>% 
+  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter")),
+         placement_reason = str_wrap(placement_reason, width=25)) %>% 
   count(qtr, placement_reason) %>% 
   ggplot(aes(x = qtr, y = n, fill = placement_reason)) +
   geom_col(position='stack') +
