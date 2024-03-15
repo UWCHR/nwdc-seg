@@ -92,11 +92,11 @@ knitr::kable(transpose_df(nwdc_seg_trin) %>%
 
 ```
 
-The first solitary placement began on `r nwdc_seg_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_seg_trin$release_date[1]`, or `r nwdc_seg_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_seg_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_seg_trin$length_of_stay[2]` days. (As noted in the replication data for the HLS/PHR report, ongoing solitary placements were dropped from analysis for the published report; we include these records here due to their relevance to issues at the NWDC.)
+The first solitary placement began on `r nwdc_seg_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_seg_trin$release_date[1]`, or `r nwdc_seg_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_seg_trin$placement_date[2]` and was ongoing at the time of release of the HLS/PHR data in mid-September 2023, or at least `r nwdc_seg_trin$length_of_stay[2]` days. (As noted in the replication data for the HLS/PHR report, ongoing solitary placements were dropped from analysis for the published report; we include these records here due to their relevance to issues at the NWDC.)
 
 As noted, both stays were reported by ICE as "Detainee Request", with the second stay categorized as "Protective Custody". Both stays are also flagged as "Serious Mental Illness".
 
-As seen below, Daniel's second placement of at least `r nwdc_seg_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC and was also ongoing at the time of release of the dataset. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
+As seen below, Daniel's second placement of at least `r nwdc_seg_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS/PHR dataset. As seen below, the longest individual placement reported nationally was also at NWDC and was also ongoing at the time of release of the dataset. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
 
 ```{r placemnent_length_natl, message = FALSE, warning = FALSE}
 
@@ -170,7 +170,9 @@ SRMS placements are flagged for "special vulnerability" categories, noted in the
 
 ### Mental illness
 
-```{r mental_illness_prop}
+```{r mental_illness_prop, message=FALSE, warning=FALSE}
+
+df$mental_illness <- factor(df$mental_illness, levels = c("Serious Mental Illness", "Mental Illness", "None", NA))
 
 mi_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -208,17 +210,20 @@ p1
 
 ```
 
-```{r mental_illness_length}
+```{r mental_illness_length, message=FALSE, warning=FALSE}
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
   mutate(group = "NWDC")
 
 df_all <- df %>% 
-  mutate(group = "Nat'l")
+  mutate(group = "National")
 
 dat <- rbind(df_nwdc, df_all) %>% 
-  mutate(group = as.factor(group))
+  mutate(group = as.factor(group),
+         mental_illness = case_when(mental_illness %in% c("None", NA) ~ "None/NA",
+         TRUE ~ mental_illness),
+         mental_illness = factor(mental_illness, levels = c("Serious Mental Illness", "Mental Illness", "None/NA")))
 
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = mental_illness)) +
@@ -230,9 +235,50 @@ b1
 
 ```
 
+```{r mental_illness_length_tab, message=FALSE, warning=FALSE}
+
+dat %>% 
+  group_by(group, mental_illness) %>% 
+  summarize("average placement length" = mean(length_of_stay, na.rm=TRUE),
+            "median placement length" = median(length_of_stay, na.rm=TRUE),
+            "total placements" = n()) %>% 
+  pivot_wider(names_from = c('group'), names_glue = "{group} {.value}", values_from = c('average placement length', 'median placement length', "total placements")) %>% 
+  mutate("NWDC % longer than national average" = (`NWDC average placement length` / `National average placement length` - 1) * 100,
+         "NWDC % longer than national median" = (`NWDC median placement length` / `National median placement length` - 1) * 100
+         ) %>% 
+  # dplyr::select(-c("NWDC % longer than national average",
+  #                   "NWDC % longer than national median")) %>% 
+  knitr::kable(digits=2)
+
+
+
+```
+
+```{r mental_illness_placements_fig, message=FALSE, warning=FALSE}
+
+p1 <- df %>% 
+  filter(facility == nwdc,
+         placement_date >= "2018-09-01") %>% 
+  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter"))) %>% 
+  count(qtr, mental_illness) %>% 
+  ggplot(aes(x = qtr, y = n, fill = mental_illness)) +
+  geom_col(position='stack') +
+  labs(title="NWDC solitary placements, Sept. 2018-Sept. 2023",
+       subtitle="`Mental Illness` categories",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
+  ylab("Total Placements") +
+  xlab("Placement date (FY quarter)") +
+  scale_fill_viridis_d(na.value='grey') +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  
+p1
+
+```
+
 ### Serious medical illness
 
-```{r medical_illness_length}
+```{r medical_illness_length, message=FALSE, warning=FALSE}
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -259,7 +305,7 @@ b1
 
 ### Serious disability
 
-```{r serious_disability_length}
+```{r serious_disability_length, message=FALSE, warning=FALSE}
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -286,7 +332,7 @@ b1
 
 ## Detainee-requested versus Facility-initiated solitary placements
 
-```{r detainee_request_prop}
+```{r detainee_request_prop, message=FALSE, warning=FALSE}
 
 dr_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -324,7 +370,7 @@ p1
 
 ```
 
-```{r detainee_request_length}
+```{r detainee_request_length, message=FALSE, warning=FALSE}
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -350,18 +396,18 @@ b1
 
 Note no placements categorized as "Hunger Strike", "Mental Illness" (some "Medical/Mental"), or "Suicide Risk" at NWDC. Note several of these categories are not mutually-exclusive.
 
-```{r placement_reason_length}
+```{r placement_reason_length, message=FALSE, warning=FALSE}
 
 df <- df %>% 
   mutate(placement_reason_short = case_when(
     str_detect(placement_reason, "Detainee Request: Other") ~ "Detainee Request",
     str_detect(placement_reason, "Disciplinary") ~ "Disciplinary",
     str_detect(placement_reason, "Facility Initiated: Other") ~ "Facility Initiated",
-    str_detect(placement_reason, "Facility Security Threat") ~ "Facility Initiated",
-    str_detect(placement_reason, "Facility Security Threat: Due to Seriousness of Criminal Conviction") ~ "Facility Initiated",
-    str_detect(placement_reason, "Facility Security Threat: Gang Member Status (Not Protective Custody)") ~ "Facility Initiated",
-    str_detect(placement_reason, "Facility Security Threat: Other") ~ "Facility Initiated",
-    str_detect(placement_reason, "Facility Security Threat: Violent or Disruptive Behavior") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Due to Seriousness of Criminal Conviction") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Gang Member Status (Not Protective Custody)") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Other") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Violent or Disruptive Behavior") ~ "Facility Security Threat",
     str_detect(placement_reason, "Hunger Strike") ~ "Hunger Strike",
     str_detect(placement_reason, "Medical/Mental") ~ "Medical/Mental",
     str_detect(placement_reason, "Medical: Detox/Withdrawal Observation") ~ "Medical",
@@ -373,7 +419,6 @@ df <- df %>%
     str_detect(placement_reason, "Medical: Tuberculosis") ~ "Medical",
     str_detect(placement_reason, "Mental Illness") ~ "Mental Illness",
     str_detect(placement_reason, "Mental Illness: Observation") ~ "Mental Illness",
-    str_detect(placement_reason, "Other") ~ "Other",
     str_detect(placement_reason, "Other: Pending General Population Bedspace Availability") ~ "Other",
     str_detect(placement_reason, "Other: Unique Reason Not Listed (Explain in Comments)") ~ "Other",
     str_detect(placement_reason, "Pending Investigation of Disciplinary Violation") ~ "Pending Disciplinary",
@@ -384,7 +429,8 @@ df <- df %>%
     str_detect(placement_reason, "Protective Custody: Other Detainee Safety") ~ "Protective Custody",
     str_detect(placement_reason, "Protective Custody: Special Vulnerability Other") ~ "Protective Custody",
     str_detect(placement_reason, "Protective Custody: Victim of Sexual Assault") ~ "Protective Custody",
-    str_detect(placement_reason, "Suicide Risk Placement") ~ "Suicide Risk"
+    str_detect(placement_reason, "Suicide Risk Placement") ~ "Suicide Risk",
+    str_detect(placement_reason, "Other") ~ "Other",
   ))
 
 df_nwdc <- df %>% 
@@ -405,7 +451,7 @@ b1 <- dat %>%
 b1
 ```
 
-```{r placement_reason_prop}
+```{r placement_reason_prop, message=FALSE, warning=FALSE}
 
 dr_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
@@ -440,5 +486,52 @@ p1 <- dat %>%
   theme_minimal()
 
 p1
+
+```
+
+### NWDC solitary placements by "Placement Reason"
+
+```{r nwdc_placement_reason_interactive, message=FALSE, warning=FALSE}
+
+p1 <- df %>% 
+  filter(facility == nwdc,
+         placement_date >= "2018-09-01") %>% 
+  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter"))) %>% 
+  count(qtr, placement_reason) %>% 
+  ggplot(aes(x = qtr, y = n, fill = placement_reason)) +
+  geom_col(position='stack') +
+  labs(title="NWDC solitary placements, Sept. 2018-Sept. 2023",
+       subtitle="`Placement Reason` categories",
+       caption="Data source: ICE SRMS data released via FOIA to PHR/HLS\nFigure: UWCHR analysis") +
+  ylab("Placements") +
+  xlab("Placement date (FY quarter)") +
+  scale_fill_viridis_d(na.value='grey') +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  
+ggplotly(p1)
+
+```
+
+### National solitary placements by "Placement Reason"
+
+```{r natl_placement_reason_interactive, message=FALSE, warning=FALSE}
+
+p1 <- df %>% 
+  filter(placement_date >= "2018-09-01") %>% 
+  mutate(qtr = as.factor(quarter(placement_date, fiscal_start=10, type="year.quarter"))) %>% 
+  count(qtr, placement_reason) %>% 
+  ggplot(aes(x = qtr, y = n, fill = placement_reason)) +
+  geom_col(position='stack') +
+  labs(title="National ICE solitary placements, Sept. 2018-Sept. 2023",
+       subtitle="`Placement Reason` categories",
+       caption="Data source: ICE SRMS data released via FOIA to PHR/HLS\nFigure: UWCHR analysis") +
+  ylab("Placements") +
+  xlab("Placement date (FY quarter)") +
+  scale_fill_viridis_d(na.value='grey') +
+  theme_minimal() +
+  theme(axis.text.x=element_text(angle=45,hjust=1))
+  
+ggplotly(p1)
 
 ```
