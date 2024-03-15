@@ -13,7 +13,7 @@ output:
 
 # Data source
 
-This dataset of ICE Segregation Review Management System records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR). For a full description of the dataset, see the above linked report.
+This dataset of ICE Segregation Review Management System records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR).
 
 ## Notebook goal
 
@@ -31,18 +31,24 @@ df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1
 
 names(df) %<>% stringr::str_replace_all("\\s","_") %>% tolower
 
+nwdc <- "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)"
+
+# Checking for any variation in SEA AOR facility names; NWDC should be only one present
+stopifnot(length(unique(df[df$facility_aor == "SEA (Seattle)", "facility"])) == 1)
+
 ```
+
+## Data overview
+
+The HLS/PHR dataset includes a total of `r nrow(df)` SMRS placement records for `r length(unique(df$facility))` U.S. ICE detention facilities. For a full description of the dataset, see the [full report](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention).
+
+The dataset includes a total of `r nrow(df %>% filter(facility == nwdc))` SRMS placement records for the Northwest Detention Center (NWDC) in Tacoma, WA.
 
 ## Death of Charles Leo Daniel at NWDC
 
 On March 7, 2024, the death of Charles Leo Daniel was reported at Northwest Detention Center (NWDC). Daniel, a citizen of Trinidad and Tobago, was reportedly in segregation at the time of his death. Other ICE records reveal that Daniel was booked in to the NWDC on April 2, 2020, and that he was the only citizen of Trinidad and Tobago to be detained at the facility from his arrival in 2020 until August 15, 2022. Therefore, we conclude that the two ICE SRMS records in the HLS dataset for a male citizen of Trinidad and Tobago at NWDC represent Daniel's segregation history while detained at the facility. The full records are presented below (note redaction of some values):
 
 ```{r nwdc_trinidad, message = FALSE, warning = FALSE}
-
-nwdc <- "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)"
-
-# Checking for any variation in SEA AOR facility names; NWDC should be only one present
-stopifnot(length(unique(df[df$facility_aor == "SEA (Seattle)", "facility"])) == 1)
 
 nwdc_trin <- df %>% 
   filter(str_detect(facility, "TACOMA"),
@@ -68,16 +74,17 @@ knitr::kable(transpose_df(nwdc_trin) %>%
 
 ```
 
-The first solitary placement began on `r nwdc_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_trin$release_date[1]`, or `r nwdc_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_trin$length_of_stay[2]` days.
+The first solitary placement began on `r nwdc_trin$placement_date[1]`, shortly after Daniel was booked into the NWDC and lasted until `r nwdc_trin$release_date[1]`, or `r nwdc_trin$length_of_stay[1]` days. The second solitary placement began two days later on `r nwdc_trin$placement_date[2]` and was ongoing at the time of release of the HLS data in mid-September 2023, or at least `r nwdc_trin$length_of_stay[2]` days. (As noted in the replication data for the HLS/PHR report, ongoing solitary placements were dropped from analysis for the published report; we include these records here due to their relevance to issues at the NWDC.)
 
 As noted, both stays were reported by ICE as "Detainee Request", with the second stay categorized as "Protective Custody". Both stays are also flagged as "Serious Mental Illness".
 
-As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
+As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay[2]` days was the second longest individual solitary placement reported nationally during the time period covered by the HLS dataset. As seen below, the longest individual placement reported nationally was also at NWDC and was also ongoing at the time of release of the dataset. (Because unique personal identifiers are not included in this dataset, it is not possible to calculate cumulative stay length per person across individual solitary placements.)
 
 ```{r placemnent_length_natl, message = FALSE, warning = FALSE}
 
 t1 <- df %>% 
-  dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
+  mutate(ongoing_stay = is.na(release_date)) %>% 
+  dplyr::select(country_of_citizenship, facility, length_of_stay, ongoing_stay) %>% 
   arrange(desc(length_of_stay)) %>% 
   head(10) %>% 
   knitr::kable(caption = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
@@ -115,10 +122,10 @@ In fact, solitary placements reported to SRMS at the Northwest ICE Process Cente
 
 df_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
-  mutate(group = "TACOMA ICE PROCESSING CTR\n(NORTHWEST DET CTR) (WA)")
+  mutate(group = "NWDC")
 
 df_all <- df %>% 
-  mutate(group = "NATIONWIDE SOLITARY\nPLACEMENTS")
+  mutate(group = "Nat'l")
 
 dat <- rbind(df_nwdc, df_all) %>% 
   mutate(group = as.factor(group))
@@ -137,54 +144,283 @@ b1
 
 ```
 
-```{r compare_natl_nwdc_daniel}
+## Special vulnerabilities
 
-df_nwdc <- df %>% 
+SRMS placements are flagged for "special vulnerability" categories, noted in the dataset as "Mental Illness", "Serious Medical Illness", "Serious Disability", and "Suicide Risk?".
+
+```{r mental_illness_prop}
+
+# Standardize one bad value
+df <- df %>% 
+  mutate(mental_illness = case_when(mental_illness == "Yes" ~ "Mental Illness",
+                                    TRUE ~ mental_illness))
+
+mi_nwdc <- df %>% 
   filter(facility == nwdc) %>% 
-  mutate(group = "NWDC AVG. SOLITARY\nPLACEMENT LENGTH") %>% 
-  group_by(group) %>% 
-  summarize(avg_stay = mean(length_of_stay),
-            total_stay = NA)
+  count(mental_illness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
 
-df_all <- df %>% 
-  mutate(group = "NATIONWIDE AVG. SOLITARY\nPLACEMENT LENGTH") %>% 
-  group_by(group) %>% 
-  summarize(avg_stay = mean(length_of_stay),
-            total_stay = NA)
+mi_natl <- df %>%
+  count(mental_illness) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
 
-df_daniel <- df %>% 
-  filter(facility == nwdc,
-         country_of_citizenship == "TRINIDAD AND TOBAGO") %>% 
-  slice_max(length_of_stay) %>% 
-  mutate(group = "CHARLES LEO DANIEL\n(LONGEST PLACEMENT)") %>% 
-  group_by(group) %>% 
-  summarize(total_stay = mean(length_of_stay),
-            avg_stay = NA)
+dat <- left_join(mi_natl, mi_nwdc, by='mental_illness', suffix=c(".natl", ".nwdc")) %>% 
+  pivot_longer(cols=-c('mental_illness')) %>%
+  filter(str_detect(name, "prop")) %>% 
+  mutate(value = case_when(name == "prop.natl" ~ -value,
+                   name == "prop.nwdc" ~ value))
 
-dat <- rbind(df_nwdc, df_all, df_daniel)
+mi_prop_range <- range(dat$value)
+mi_prop_range_breaks <- pretty(dat$value, 10)
 
 p1 <- dat %>% 
-  mutate(xpos="1") %>% 
-  ggplot() +
-  geom_bar(aes(x = xpos, y = total_stay, fill = group), stat='identity', width = 0.9, alpha = 0.3) +
-  geom_col(aes(x = xpos, y = avg_stay, fill = group), position ="dodge", width = 0.7) +
-  geom_hline(aes(yintercept = 15)) +
-  xlab("")
+  ggplot(aes(x = value, y = mental_illness, fill=name), color = 'black') +
+    geom_col() +
+    scale_fill_viridis_d(limits=rev) +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(
+      breaks = mi_prop_range_breaks,
+      labels = function(x) scales::percent(abs(x))) +
+  labs(title = "Proportion of solitary placements",
+       subtitle = "NWDC vs. national") +
+  theme_minimal()
 
 p1
 
 ```
 
-```{r temp}
+```{r mental_illness_length}
 
-temp <- data_frame(name = LETTERS[1:10], provision = rnorm(mean = 100, sd = 20, n = 10),
-                expenditure = provision - rnorm(mean = 25, sd = 10, n = 10))
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
 
-temp %>% mutate(savings = provision - expenditure) %>%
-  pivot_longer(cols = c("expenditure", "savings"), names_to = "Exp", values_to = "val") %>%
-  ggplot() + geom_bar(aes(x= name, y = provision/2), stat = "identity", fill = "blue", width = 0.9, alpha = 0.3) +
-  geom_col(aes(x=name,y=val, fill = Exp), position ="dodge", width = 0.7) +
-  scale_y_continuous(name = "Amount in \u20b9")
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all) %>% 
+  mutate(group = as.factor(group))
+
+b1 <- dat %>% 
+  ggplot(aes(x = group, y = log(length_of_stay), fill = mental_illness)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal()
+
+b1
 
 ```
 
+
+```{r medical_illness_length}
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
+
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all) %>% 
+  mutate(group = as.factor(group))
+
+dat %>% 
+  count(group, serious_medical_illness)
+
+b1 <- dat %>% 
+  ggplot(aes(x = group, y = log(length_of_stay), fill = serious_medical_illness) )+
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal()
+
+b1
+
+```
+
+
+```{r serious_disability_length}
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
+
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all) %>% 
+  mutate(group = as.factor(group))
+
+dat %>% 
+  count(group, serious_disability)
+
+b1 <- dat %>% 
+  ggplot(aes(x = group, y = log(length_of_stay), fill = serious_disability) )+
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal()
+
+b1
+
+```
+
+
+```{r detainee_request_prop}
+
+dr_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  count(detainee_request_segregation) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
+
+dr_natl <- df %>%
+  count(detainee_request_segregation) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
+
+dat <- left_join(dr_natl, dr_nwdc, by='detainee_request_segregation', suffix=c(".natl", ".nwdc")) %>% 
+  pivot_longer(cols=-c('detainee_request_segregation')) %>%
+  filter(str_detect(name, "prop")) %>% 
+  mutate(value = case_when(name == "prop.natl" ~ -value,
+                   name == "prop.nwdc" ~ value))
+
+dr_prop_range <- range(dat$value)
+dr_prop_range_breaks <- pretty(dat$value, 10)
+
+p1 <- dat %>% 
+  ggplot(aes(x = value, y = detainee_request_segregation, fill=name), color = 'black') +
+    geom_col() +
+    scale_fill_viridis_d(limits=rev) +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(
+      breaks = dr_prop_range_breaks,
+      labels = function(x) scales::percent(abs(x))) +
+  labs(title = "Proportion of solitary placements",
+       subtitle = "NWDC vs. national") +
+  theme_minimal()
+
+p1
+
+```
+
+## Detainee request
+
+```{r detainee_request_length}
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
+
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all) %>% 
+  mutate(group = as.factor(group))
+
+b1 <- dat %>% 
+  ggplot(aes(x = group, y = log(length_of_stay), fill = detainee_request_segregation)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal()
+
+b1
+
+```
+
+## Placement reason
+
+Note no placements categorized as "Hunger Strike", "Mental Illness" (some "Medical/Mental"), or "Suicide Risk" at NWDC. Note several of these categories are not mutually-exclusive.
+
+```{r placement_reason_length}
+
+df <- df %>% 
+  mutate(placement_reason_short = case_when(
+    str_detect(placement_reason, "Detainee Request: Other") ~ "Detainee Request",
+    str_detect(placement_reason, "Disciplinary") ~ "Disciplinary",
+    str_detect(placement_reason, "Facility Initiated: Other") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat: Due to Seriousness of Criminal Conviction") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat: Gang Member Status (Not Protective Custody)") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat: Other") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat: Violent or Disruptive Behavior") ~ "Facility Initiated",
+    str_detect(placement_reason, "Hunger Strike") ~ "Hunger Strike",
+    str_detect(placement_reason, "Medical/Mental") ~ "Medical/Mental",
+    str_detect(placement_reason, "Medical: Detox/Withdrawal Observation") ~ "Medical",
+    str_detect(placement_reason, "Medical: Disabled or Infirm") ~ "Medical",
+    str_detect(placement_reason, "Medical: Observation") ~ "Medical",
+    str_detect(placement_reason, "Medical: Other Infectious Disease") ~ "Medical",
+    str_detect(placement_reason, "Medical: Other") ~ "Medical",
+    str_detect(placement_reason, "Medical: Segregation Unit") ~ "Medical",
+    str_detect(placement_reason, "Medical: Tuberculosis") ~ "Medical",
+    str_detect(placement_reason, "Mental Illness") ~ "Mental Illness",
+    str_detect(placement_reason, "Mental Illness: Observation") ~ "Mental Illness",
+    str_detect(placement_reason, "Other") ~ "Other",
+    str_detect(placement_reason, "Other: Pending General Population Bedspace Availability") ~ "Other",
+    str_detect(placement_reason, "Other: Unique Reason Not Listed (Explain in Comments)") ~ "Other",
+    str_detect(placement_reason, "Pending Investigation of Disciplinary Violation") ~ "Pending Disciplinary",
+    str_detect(placement_reason, "Protective Custody") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Criminal Offense (i.e. Sex Offender)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Gang Status (Protective Custody Only)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Lesbian, Gay, Bisexual, Transgender (LGBT)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Other Detainee Safety") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Special Vulnerability Other") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Victim of Sexual Assault") ~ "Protective Custody",
+    str_detect(placement_reason, "Suicide Risk Placement") ~ "Suicide Risk"
+  ))
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
+
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all)
+
+b1 <- dat %>% 
+  ggplot(aes(y = placement_reason_short, x = log(length_of_stay), fill = group)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(limits=rev) +
+  theme_minimal()
+
+b1
+```
+
+```{r placement_reason_prop}
+
+dr_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  count(placement_reason_short) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
+
+dr_natl <- df %>%
+  count(placement_reason_short) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup()
+
+dat <- left_join(dr_natl, dr_nwdc, by='placement_reason_short', suffix=c(".natl", ".nwdc")) %>% 
+  pivot_longer(cols=-c('placement_reason_short')) %>%
+  filter(str_detect(name, "prop")) %>% 
+  mutate(value = case_when(name == "prop.natl" ~ -value,
+                   name == "prop.nwdc" ~ value))
+
+dr_prop_range <- range(dat$value)
+dr_prop_range_breaks <- pretty(dat$value, 10)
+
+p1 <- dat %>% 
+  ggplot(aes(x = value, y = placement_reason_short, fill=name), color = 'black') +
+    geom_col() +
+    scale_fill_viridis_d(limits=rev) +
+    scale_y_discrete(limits=rev) +
+    scale_x_continuous(
+      breaks = dr_prop_range_breaks,
+      labels = function(x) scales::percent(abs(x))) +
+  labs(title = "Proportion of solitary placements",
+       subtitle = "NWDC vs. national") +
+  theme_minimal()
+
+p1
+
+```
