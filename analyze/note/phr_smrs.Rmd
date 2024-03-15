@@ -84,7 +84,7 @@ As seen below, Daniel's second placement of at least `r nwdc_trin$length_of_stay
 
 t1 <- df %>% 
   mutate(ongoing_stay = is.na(release_date)) %>% 
-  dplyr::select(country_of_citizenship, facility, length_of_stay, ongoing_stay) %>% 
+  dplyr::select(country_of_citizenship, facility, length_of_stay, mental_illness) %>% 
   arrange(desc(length_of_stay)) %>% 
   head(10) %>% 
   knitr::kable(caption = "Top 10 longest solitary placements nationwide, Sept. 2018-Sept. 2023",
