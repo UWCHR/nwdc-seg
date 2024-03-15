@@ -6,3 +6,4 @@
 .Rproj.user
 *.Rproj
 *.xlsx
+import/frozen/dataverse_files/*
