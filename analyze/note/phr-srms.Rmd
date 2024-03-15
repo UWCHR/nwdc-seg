@@ -17,7 +17,7 @@ This dataset of ICE Segregation Review Management System (SRMS) records from Sep
 
 ## Notebook goal
 
-This notebook focuses on analysis of ICE Segregation Review Management System (SRMS) records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
+This notebook serves as an appendix to UWCHR's [NWDC Conditions Research Update: Charles Leo Daniel’s Death at NWDC in Context](https://jsis.washington.edu/humanrights/2024/03/15/nwdc-conditions-research-update-daniel-death-in-context/). Analysis focuses on ICE Segregation Review Management System (SRMS) records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
 
 ```{r import_data, message = FALSE, warning = FALSE}
 
