@@ -138,7 +138,8 @@ b1 <- dat %>%
   scale_x_discrete() +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
-       subtitle = "National versus NWDC")
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 
@@ -198,7 +199,8 @@ p1 <- dat %>%
       breaks = mi_prop_range_breaks,
       labels = function(x) scales::percent(abs(x))) +
   labs(title = "Proportion of solitary placements",
-       subtitle = "NWDC vs. national") +
+       subtitle = "NWDC vs. national",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
   theme_minimal()
 
 p1
@@ -224,7 +226,10 @@ b1 <- dat %>%
   ggplot(aes(x = group, y = log(length_of_stay), fill = mental_illness)) +
   geom_boxplot() +
   scale_fill_viridis_d() +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 
@@ -292,7 +297,10 @@ b1 <- dat %>%
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_medical_illness) )+
   geom_boxplot() +
   scale_fill_viridis_d() +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 
@@ -319,7 +327,10 @@ b1 <- dat %>%
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_disability) )+
   geom_boxplot() +
   scale_fill_viridis_d() +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 
@@ -358,7 +369,8 @@ p1 <- dat %>%
       breaks = dr_prop_range_breaks,
       labels = function(x) scales::percent(abs(x))) +
   labs(title = "Proportion of solitary placements",
-       subtitle = "NWDC vs. national") +
+       subtitle = "NWDC vs. national",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
   theme_minimal()
 
 p1
@@ -381,7 +393,10 @@ b1 <- dat %>%
   ggplot(aes(x = group, y = log(length_of_stay), fill = detainee_request_segregation)) +
   geom_boxplot() +
   scale_fill_viridis_d() +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 
@@ -441,7 +456,10 @@ b1 <- dat %>%
   ggplot(aes(y = placement_reason_short, x = log(length_of_stay), fill = group)) +
   geom_boxplot() +
   scale_fill_viridis_d(limits=rev) +
-  theme_minimal()
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
 
 b1
 ```
@@ -477,7 +495,8 @@ p1 <- dat %>%
       breaks = dr_prop_range_breaks,
       labels = function(x) scales::percent(abs(x))) +
   labs(title = "Proportion of solitary placements",
-       subtitle = "NWDC vs. national") +
+       subtitle = "NWDC vs. national",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
   theme_minimal()
 
 p1
