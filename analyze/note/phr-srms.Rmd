@@ -50,7 +50,10 @@ df <- df %>%
          facility = case_when(facility == "WEBB COUNTY DETENTION CENTER (TX)" ~ "WEBB COUNTY DETENTION CENTER (CCA) (TX)",
                               TRUE ~ facility))
 
-
+# Physicians for Human Rights/Harvard Law School report omits records with ongoing solitary placements
+# Uncomment this filter to reproduce PHR/HLS report results:
+# df <- df %>%
+# filter(!is.na(release_date))
 
 ```
 
@@ -111,6 +114,25 @@ t1 <- df %>%
                row.names = TRUE)
 
 t1
+
+```
+
+As reported by Physicians for Human Rights/Harvard Law School, Northwest Detention Center ranked 9th out of `r length(unique(df$facility))` facilities represented in the SRMS data when ranked by average solitary placement length, this figure does not change when ongoing stays are taken into account; however, note below that the number of reported solitary placements at NWDC was significantly greater than other facilities in the top 10:
+
+```{r placemnent_length_rank_natl, message = FALSE, warning = FALSE}
+
+t0 <- df %>% 
+  group_by(facility) %>% 
+  summarize(avg_placement_length = mean(length_of_stay),
+            n = n()) %>% 
+  arrange(desc(avg_placement_length)) %>%
+  head(10) %>%
+  dplyr::select(facility, avg_placement_length, n) %>% 
+  knitr::kable(caption = "Avg. solitary placement length by facility, Sept. 2018-Sept. 2023",
+               row.names = TRUE,
+               digits=2)
+
+t0
 
 ```
 
@@ -183,27 +205,20 @@ mi_natl <- df %>%
 
 dat <- left_join(mi_natl, mi_nwdc, by='mental_illness', suffix=c(".natl", ".nwdc")) %>% 
   pivot_longer(cols=-c('mental_illness')) %>%
-  filter(str_detect(name, "prop")) %>% 
-  mutate(value = case_when(name == "prop.natl" ~ -value,
-                   name == "prop.nwdc" ~ value))
-
-mi_prop_range <- range(dat$value)
-mi_prop_range_breaks <- pretty(dat$value, 10)
+  filter(str_detect(name, "prop"))
 
 p1 <- dat %>% 
-  ggplot(aes(x = value, y = mental_illness, fill=name), color = 'black') +
-    geom_col() +
-    scale_fill_viridis_d(limits=rev) +
-    scale_y_discrete(limits=rev) +
-    scale_x_continuous(
-      breaks = mi_prop_range_breaks,
-      labels = function(x) scales::percent(abs(x))) +
+  ggplot(aes(x = mental_illness, y = value, fill=name), color = 'black') +
+    geom_col(position='dodge') +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_viridis_d(limits=rev) +
   labs(title = "Proportion of solitary placements",
        subtitle = "NWDC vs. national",
        caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
   theme_minimal()
 
 p1
+
 
 ```
 
@@ -338,6 +353,8 @@ b1
 
 ## Detainee-requested versus Facility-initiated solitary placements
 
+Note larger proportion of "detainee-requested" solitary placements reported at NWDC compared to national; similar distribution of placement lengths between these categories comparing NWDC to national stay length.
+
 ```{r detainee_request_prop, message=FALSE, warning=FALSE}
 
 dr_nwdc <- df %>% 
@@ -353,21 +370,13 @@ dr_natl <- df %>%
 
 dat <- left_join(dr_natl, dr_nwdc, by='detainee_request_segregation', suffix=c(".natl", ".nwdc")) %>% 
   pivot_longer(cols=-c('detainee_request_segregation')) %>%
-  filter(str_detect(name, "prop")) %>% 
-  mutate(value = case_when(name == "prop.natl" ~ -value,
-                   name == "prop.nwdc" ~ value))
-
-dr_prop_range <- range(dat$value)
-dr_prop_range_breaks <- pretty(dat$value, 10)
+  filter(str_detect(name, "prop"))
 
 p1 <- dat %>% 
-  ggplot(aes(x = value, y = detainee_request_segregation, fill=name), color = 'black') +
-    geom_col() +
-    scale_fill_viridis_d(limits=rev) +
-    scale_y_discrete(limits=rev) +
-    scale_x_continuous(
-      breaks = dr_prop_range_breaks,
-      labels = function(x) scales::percent(abs(x))) +
+  ggplot(aes(x = detainee_request_segregation, y = value, fill=name), color = 'black') +
+    geom_col(position='dodge') +
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_viridis_d(limits=rev) +
   labs(title = "Proportion of solitary placements",
        subtitle = "NWDC vs. national",
        caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
@@ -479,21 +488,13 @@ dr_natl <- df %>%
 
 dat <- left_join(dr_natl, dr_nwdc, by='placement_reason_short', suffix=c(".natl", ".nwdc")) %>% 
   pivot_longer(cols=-c('placement_reason_short')) %>%
-  filter(str_detect(name, "prop")) %>% 
-  mutate(value = case_when(name == "prop.natl" ~ -value,
-                   name == "prop.nwdc" ~ value))
-
-dr_prop_range <- range(dat$value)
-dr_prop_range_breaks <- pretty(dat$value, 10)
+  filter(str_detect(name, "prop"))
 
 p1 <- dat %>% 
-  ggplot(aes(x = value, y = placement_reason_short, fill=name), color = 'black') +
-    geom_col() +
-    scale_fill_viridis_d(limits=rev) +
-    scale_y_discrete(limits=rev) +
-    scale_x_continuous(
-      breaks = dr_prop_range_breaks,
-      labels = function(x) scales::percent(abs(x))) +
+  ggplot(aes(y = placement_reason_short, x = value, fill=name), color = 'black') +
+    geom_col(position='dodge') +
+  scale_x_continuous(labels = scales::percent) +
+  scale_fill_viridis_d(limits=rev) +
   labs(title = "Proportion of solitary placements",
        subtitle = "NWDC vs. national",
        caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
