@@ -504,6 +504,68 @@ p1
 
 ```
 
+## Attorney representation
+
+Attorney representation is associated with statistically significant difference in stay length.
+
+Avg. stay w/ attorney representation is `r round(mean(df[df$attorney_of_record == "Yes",]$length_of_stay), 2)` days; avg. stay w/o attorney representation: `r round(mean(df[df$attorney_of_record == "No/NA",]$length_of_stay), 2)`.
+
+```{r attorney_rep_length_dist}
+
+df <- df %>% 
+  mutate(attorney_of_record = case_when(attorney_of_record %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_of_record))
+
+b1 <- df %>% 
+  ggplot(aes(x = attorney_of_record, y = log(length_of_stay), fill = attorney_of_record)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
+
+b1
+
+
+dat <- log(df[df$attorney_of_record == "Yes",]$length_of_stay)
+mu <- mean(log(df$length_of_stay))
+
+t.test(x=dat, mu=mu, alternative = "less")
+
+
+
+```
+
+When selecting only records with attorney representation, attorney notification is not associated with statistically-significant difference in stay length:
+
+```{r attorney_rep_length_dist}
+
+b1 <- df %>% 
+  filter(attorney_of_record == "Yes") %>% 
+  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_notification)) %>% 
+  ggplot(aes(x = attorney_notification, y = log(length_of_stay), fill = attorney_notification)) +
+  geom_boxplot() +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
+
+b1
+
+dat <- df %>% 
+  filter(attorney_of_record == "Yes") %>% 
+  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_notification))
+
+attorney_notified <- log(dat[dat$attorney_notification == "Yes",]$length_of_stay)
+mu <- mean(log(dat$length_of_stay))
+
+t.test(x=attorney_notified, mu=mu, alternative = "two.sided")
+
+```
+
+
 ## Interactive charts
 
 The following interactive charts offer an overview of detailed "Placement Reason" values over time at NWDC and nationally:
