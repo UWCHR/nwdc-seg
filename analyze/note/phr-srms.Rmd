@@ -156,7 +156,7 @@ b1 <- dat %>%
   group_by(group) %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill=group)) +
   geom_boxplot() +
-  scale_fill_viridis_d(direction=-1, breaks=rev) +
+  scale_fill_viridis_d(direction=-1, breaks=rev, alpha=.5) +
   scale_x_discrete() +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
@@ -240,7 +240,7 @@ dat <- rbind(df_nwdc, df_all) %>%
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = mental_illness)) +
   geom_boxplot() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(alpha=.5) +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
        subtitle = "National versus NWDC",
@@ -311,7 +311,7 @@ dat <- rbind(df_nwdc, df_all) %>%
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_medical_illness) )+
   geom_boxplot() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(alpha=.5) +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
        subtitle = "National versus NWDC",
@@ -341,7 +341,7 @@ dat <- rbind(df_nwdc, df_all) %>%
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = serious_disability) )+
   geom_boxplot() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(alpha=.5) +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
        subtitle = "National versus NWDC",
@@ -401,7 +401,7 @@ dat <- rbind(df_nwdc, df_all) %>%
 b1 <- dat %>% 
   ggplot(aes(x = group, y = log(length_of_stay), fill = detainee_request_segregation)) +
   geom_boxplot() +
-  scale_fill_viridis_d() +
+  scale_fill_viridis_d(alpha=.5) +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
        subtitle = "National versus NWDC",
@@ -464,7 +464,7 @@ dat <- rbind(df_nwdc, df_all)
 b1 <- dat %>% 
   ggplot(aes(y = placement_reason_short, x = log(length_of_stay), fill = group)) +
   geom_boxplot() +
-  scale_fill_viridis_d(limits=rev) +
+  scale_fill_viridis_d(limits=rev, alpha=.5) +
   theme_minimal() +
   labs(title = "Distribution of solitary placement lengths",
        subtitle = "National versus NWDC",
@@ -503,68 +503,6 @@ p1 <- dat %>%
 p1
 
 ```
-
-## Attorney representation
-
-Attorney representation is associated with statistically significant difference in stay length.
-
-Avg. stay w/ attorney representation is `r round(mean(df[df$attorney_of_record == "Yes",]$length_of_stay), 2)` days; avg. stay w/o attorney representation: `r round(mean(df[df$attorney_of_record == "No/NA",]$length_of_stay), 2)`.
-
-```{r attorney_rep_length_dist}
-
-df <- df %>% 
-  mutate(attorney_of_record = case_when(attorney_of_record %in% c("No", NA) ~ "No/NA",
-         TRUE ~ attorney_of_record))
-
-b1 <- df %>% 
-  ggplot(aes(x = attorney_of_record, y = log(length_of_stay), fill = attorney_of_record)) +
-  geom_boxplot() +
-  scale_fill_viridis_d() +
-  theme_minimal() +
-  labs(title = "Distribution of solitary placement lengths",
-       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
-
-b1
-
-
-dat <- log(df[df$attorney_of_record == "Yes",]$length_of_stay)
-mu <- mean(log(df$length_of_stay))
-
-t.test(x=dat, mu=mu, alternative = "less")
-
-
-
-```
-
-When selecting only records with attorney representation, attorney notification is not associated with statistically-significant difference in stay length:
-
-```{r attorney_rep_length_dist}
-
-b1 <- df %>% 
-  filter(attorney_of_record == "Yes") %>% 
-  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
-         TRUE ~ attorney_notification)) %>% 
-  ggplot(aes(x = attorney_notification, y = log(length_of_stay), fill = attorney_notification)) +
-  geom_boxplot() +
-  scale_fill_viridis_d() +
-  theme_minimal() +
-  labs(title = "Distribution of solitary placement lengths",
-       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
-
-b1
-
-dat <- df %>% 
-  filter(attorney_of_record == "Yes") %>% 
-  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
-         TRUE ~ attorney_notification))
-
-attorney_notified <- log(dat[dat$attorney_notification == "Yes",]$length_of_stay)
-mu <- mean(log(dat$length_of_stay))
-
-t.test(x=attorney_notified, mu=mu, alternative = "two.sided")
-
-```
-
 
 ## Interactive charts
 

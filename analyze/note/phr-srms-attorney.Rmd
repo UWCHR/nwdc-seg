@@ -1,0 +1,198 @@
+---
+title: "Data on Solitary Confinement at the Northwest Detention Center"
+author: "UWCHR"
+date: "2024-03-14"
+output:
+    html_document:
+        html_preview: true
+        toc: true
+        toc_depth: 3
+        toc_float: true
+        code_folding: hide
+---
+
+# Data source
+
+This dataset of ICE Segregation Review Management System (SRMS) records from September 1, 2018 through September 1, 2018 was released pursuant to a FOIA request by Harvard Law School and published as [replication data](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/AT7YFA) for the report ['“Endless Nightmare” Torture and Inhuman Treatment in Solitary Confinement in U.S. Immigration Detention'](https://phr.org/our-work/resources/endless-nightmare-solitary-confinement-in-us-immigration-detention) by Harvard Immigration and Refugee Clinical Program (HIRCP) and Arevik Avedian at Harvard Law School (HLS), Peeler Immigration Lab (PIL) at Harvard Medical School (HMS), and Physicians for Human Rights (PHR).
+
+## Notebook goal
+
+This notebook serves as an appendix to UWCHR's [NWDC Conditions Research Update: Charles Leo Daniel’s Death at NWDC in Context](https://jsis.washington.edu/humanrights/2024/03/15/nwdc-conditions-research-update-daniel-death-in-context/). Analysis focuses on ICE Segregation Review Management System (SRMS) records reported by the Northwest ICE Processing Center in Tacoma, WA; also known as the Northwest Detention Center (NWDC), and coded as "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)" in the below data. Given that this analysis was conducted in response to a breaking news event, it may be updated to reflect ongoing analysis.
+
+```{r import_data, message = FALSE, warning = FALSE}
+
+library(pacman)
+p_load(tidyverse, arrow, lubridate, zoo, digest, ggplot2, plotly, gghighlight, viridis, gridExtra)
+
+df <- read_delim(here::here('analyze', 'input', 'SRMS_spreadsheet_9.1.2018_-_9.1.2023_Redacted.csv.gz'), delim='|',
+                      col_types = cols('Placement Date' = col_date(format="%m/%d/%Y"),
+                                       'Release Date' = col_date(format="%m/%d/%Y"))) %>% 
+  drop_na('Tracking Number', 'Facility AOR')
+
+names(df) %<>% stringr::str_replace_all("\\s","_") %>% tolower
+
+nwdc_det_trinidad <- read_delim(here::here('analyze', 'frozen', 'nwdc_trinidad_and_tobago_fy11-24ytd.csv.gz'), delim = "|",
+                            col_types = cols(stay_book_in_date_time = col_datetime(format=''),
+                                             stay_book_out_date_time = col_datetime(format=''),
+                                             detention_book_in_date_and_time = col_datetime(format=''),
+                                             detention_book_out_date_time = col_datetime(format='')
+                                             ))
+
+nwdc <- "TACOMA ICE PROCESSING CENTER (NORTHWEST DET CTR) (WA)"
+
+# Checking for any variation in SEA AOR facility names; NWDC should be only one present
+stopifnot(length(unique(df[df$facility_aor == "SEA (Seattle)", "facility"])) == 1)
+
+# Data cleaning per `dataverse_files/analysis/data_prep.do`
+df <- df %>% 
+  mutate(mental_illness = case_when(mental_illness == "Yes" ~ "Mental Illness",
+                                    TRUE ~ mental_illness),
+         facility = case_when(facility == "WEBB COUNTY DETENTION CENTER (TX)" ~ "WEBB COUNTY DETENTION CENTER (CCA) (TX)",
+                              TRUE ~ facility))
+
+# Physicians for Human Rights/Harvard Law School report omits records with ongoing solitary placements
+# Uncomment this filter to reproduce PHR/HLS report results:
+# df <- df %>%
+# filter(!is.na(release_date))
+
+df <- df %>% 
+  mutate(placement_reason_short = case_when(
+    str_detect(placement_reason, "Detainee Request: Other") ~ "Detainee Request",
+    str_detect(placement_reason, "Disciplinary") ~ "Disciplinary",
+    str_detect(placement_reason, "Facility Initiated: Other") ~ "Facility Initiated",
+    str_detect(placement_reason, "Facility Security Threat") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Due to Seriousness of Criminal Conviction") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Gang Member Status (Not Protective Custody)") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Other") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Facility Security Threat: Violent or Disruptive Behavior") ~ "Facility Security Threat",
+    str_detect(placement_reason, "Hunger Strike") ~ "Hunger Strike",
+    str_detect(placement_reason, "Medical/Mental") ~ "Medical/Mental",
+    str_detect(placement_reason, "Medical: Detox/Withdrawal Observation") ~ "Medical",
+    str_detect(placement_reason, "Medical: Disabled or Infirm") ~ "Medical",
+    str_detect(placement_reason, "Medical: Observation") ~ "Medical",
+    str_detect(placement_reason, "Medical: Other Infectious Disease") ~ "Medical",
+    str_detect(placement_reason, "Medical: Other") ~ "Medical",
+    str_detect(placement_reason, "Medical: Segregation Unit") ~ "Medical",
+    str_detect(placement_reason, "Medical: Tuberculosis") ~ "Medical",
+    str_detect(placement_reason, "Mental Illness") ~ "Mental Illness",
+    str_detect(placement_reason, "Mental Illness: Observation") ~ "Mental Illness",
+    str_detect(placement_reason, "Other: Pending General Population Bedspace Availability") ~ "Other",
+    str_detect(placement_reason, "Other: Unique Reason Not Listed (Explain in Comments)") ~ "Other",
+    str_detect(placement_reason, "Pending Investigation of Disciplinary Violation") ~ "Pending Disciplinary",
+    str_detect(placement_reason, "Protective Custody") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Criminal Offense (i.e. Sex Offender)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Gang Status (Protective Custody Only)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Lesbian, Gay, Bisexual, Transgender (LGBT)") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Other Detainee Safety") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Special Vulnerability Other") ~ "Protective Custody",
+    str_detect(placement_reason, "Protective Custody: Victim of Sexual Assault") ~ "Protective Custody",
+    str_detect(placement_reason, "Suicide Risk Placement") ~ "Suicide Risk",
+    str_detect(placement_reason, "Other") ~ "Other",
+  ))
+
+```
+
+## Attorney representation
+
+Attorney representation is associated with statistically significant difference in stay length.
+
+Avg. stay w/ attorney representation is `r round(mean(df[df$attorney_of_record == "Yes",]$length_of_stay), 2)` days; avg. stay w/o attorney representation: `r round(mean(df[df$attorney_of_record == "No/NA",]$length_of_stay), 2)`.
+
+```{r attorney_rep_length_dist}
+
+df <- df %>% 
+  mutate(attorney_of_record = case_when(attorney_of_record %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_of_record))
+
+b1 <- df %>% 
+  ggplot(aes(x = attorney_of_record, y = log(length_of_stay), fill = attorney_of_record)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(alpha=.5) +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
+
+b1
+
+
+dat <- log(df[df$attorney_of_record == "Yes",]$length_of_stay)
+mu <- mean(log(df$length_of_stay))
+
+t.test(x=dat, mu=mu, alternative = "less")
+
+
+
+df_nwdc <- df %>% 
+  filter(facility == nwdc) %>% 
+  mutate(group = "NWDC")
+
+df_all <- df %>% 
+  mutate(group = "Nat'l")
+
+dat <- rbind(df_nwdc, df_all)
+
+b1 <- dat %>% 
+  ggplot(aes(y = group, x = log(length_of_stay), fill = attorney_of_record)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(limits=rev, alpha=.5) +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
+
+b1
+
+b1.1 <- dat %>% 
+  ggplot(aes(y = group, x = log(length_of_stay), fill = attorney_of_record)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(limits=rev, alpha=.5) +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
+  facet_wrap( ~ detainee_request_segregation)
+
+b1.1
+
+b1.2 <- dat %>% 
+  ggplot(aes(y = group, x = log(length_of_stay), fill = attorney_of_record)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(limits=rev, alpha=.5) +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       subtitle = "National versus NWDC",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS") +
+  facet_wrap( ~ placement_reason_short)
+
+b1.2
+```
+
+When selecting only records with attorney representation, attorney notification is not associated with statistically-significant difference in stay length:
+
+```{r attorney_rep_length_dist}
+
+b1 <- df %>% 
+  filter(attorney_of_record == "Yes") %>% 
+  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_notification)) %>% 
+  ggplot(aes(x = attorney_notification, y = log(length_of_stay), fill = attorney_notification)) +
+  geom_boxplot() +
+  scale_fill_viridis_d(alpha=.5) +
+  theme_minimal() +
+  labs(title = "Distribution of solitary placement lengths",
+       caption="Figure: UWCHR analysis\nData source: ICE SRMS data released via FOIA to PHR/HLS")
+
+b1
+
+dat <- df %>% 
+  filter(attorney_of_record == "Yes") %>% 
+  mutate(attorney_notification = case_when(attorney_notification %in% c("No", NA) ~ "No/NA",
+         TRUE ~ attorney_notification))
+
+attorney_notified <- log(dat[dat$attorney_notification == "Yes",]$length_of_stay)
+mu <- mean(log(dat$length_of_stay))
+
+t.test(x=attorney_notified, mu=mu, alternative = "two.sided")
+
+```
+
