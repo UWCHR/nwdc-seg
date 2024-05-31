@@ -10,7 +10,7 @@ This project uses "Principled Data Processing" techniques and tools developed by
 
 ### Tasks
 
-Project tasks, in order of workflow (not all tasks will be present in all projects):
+Project tasks, in order of workflow:
 
 - `import/` - Convenience task for importing datasets. Input files in `import/input/` have been previously modified in a private repository to drop fields containing potentially sensitive unredacted information, and subjected to minimal cleaning and standardization (code available for review by request). Input files are symlinked to `import/output/` and then to `input/` of downstream task for transformation and analysis.
   - `import/frozen/` - Contains original PDF and XLSX versions of interal GEO Group reports which do not contain sensitive fields.
